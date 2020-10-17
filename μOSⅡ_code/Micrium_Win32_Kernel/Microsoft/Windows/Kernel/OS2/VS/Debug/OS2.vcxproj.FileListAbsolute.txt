@@ -1,0 +1,4 @@
+C:\Users\RB508\Desktop\20201014\test01\Micrium_Win32_Kernel\Microsoft\Windows\Kernel\OS2\VS\Debug\OS2.exe
+C:\Users\RB508\Desktop\20201014\test01\Micrium_Win32_Kernel\Microsoft\Windows\Kernel\OS2\VS\Debug\OS2.pdb
+C:\Users\MMLAB\Desktop\20201014\test01\Micrium_Win32_Kernel\Microsoft\Windows\Kernel\OS2\VS\Debug\OS2.exe
+C:\Users\MMLAB\Desktop\20201014\test01\Micrium_Win32_Kernel\Microsoft\Windows\Kernel\OS2\VS\Debug\OS2.pdb
