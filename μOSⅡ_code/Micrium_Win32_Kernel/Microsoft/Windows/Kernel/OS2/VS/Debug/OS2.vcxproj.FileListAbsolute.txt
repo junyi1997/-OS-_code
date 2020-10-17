@@ -2,3 +2,5 @@ C:\Users\RB508\Desktop\20201014\test01\Micrium_Win32_Kernel\Microsoft\Windows\Ke
 C:\Users\RB508\Desktop\20201014\test01\Micrium_Win32_Kernel\Microsoft\Windows\Kernel\OS2\VS\Debug\OS2.pdb
 C:\Users\MMLAB\Desktop\20201014\test01\Micrium_Win32_Kernel\Microsoft\Windows\Kernel\OS2\VS\Debug\OS2.exe
 C:\Users\MMLAB\Desktop\20201014\test01\Micrium_Win32_Kernel\Microsoft\Windows\Kernel\OS2\VS\Debug\OS2.pdb
+D:\學校\台科\10901\嵌入式作業系統實作 Embedded OS Implementation\-OS-_code\μOSⅡ_code\Micrium_Win32_Kernel\Microsoft\Windows\Kernel\OS2\VS\Debug\OS2.exe
+D:\學校\台科\10901\嵌入式作業系統實作 Embedded OS Implementation\-OS-_code\μOSⅡ_code\Micrium_Win32_Kernel\Microsoft\Windows\Kernel\OS2\VS\Debug\OS2.pdb

@@ -871,49 +871,6 @@ void  OSSchedUnlock (void)
 void  OSStart (void)
 {
 
-    /*
-    *********************************************************************************************************
-    *                                               HW00
-    ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-    */
-#define TASK_STACKSIZE        2048
-#define TASK1_PRIORITY        1
-#define TASK2_PRIORITY        2
-#define TASK1_ID              1
-#define TASK2_ID              2
-
-    static  void  task1(void* p_arg);
-    static  void  task2(void* p_arg);
-
-    static  OS_STK  TASK1_STK[TASK_STACKSIZE];
-    static  OS_STK  TASK2_STK[TASK_STACKSIZE];
-
-    OSTaskCreateExt(task1,                               /* Create the startup task*/
-        0,
-        &TASK1_STK[TASK_STACKSIZE - 1],
-        TASK1_PRIORITY,
-        TASK1_ID,
-        &TASK1_STK[0],
-        TASK_STACKSIZE,
-        0,
-        (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
-    OSTaskCreateExt(task2,                               /* Create the startup task*/
-        0,
-        &TASK2_STK[TASK_STACKSIZE - 1],
-        TASK2_PRIORITY,
-        TASK2_ID,
-        &TASK2_STK[0],
-        TASK_STACKSIZE,
-        0,
-        (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
-
-    OSTimeSet(0);                                        //OS_Time 歸零
-/*
-▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-*                                               HW00
-*********************************************************************************************************
-*/
-
     if (OSRunning == OS_FALSE) {     
 
         OS_SchedNew();                               /* Find highest priority's task priority number   */
@@ -925,34 +882,7 @@ void  OSStart (void)
 }
 
 
-/*
-*********************************************************************************************************
-*                                               HW00
-▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-*/
-void  task1(void* p_arg) {
-    (void)p_arg;
-    while (1) {
-        //printf("%d\t", OSTimeGet());      //print OSTime
-        //printf("Task(1)\n");              //test delay
-        OSTimeDly(3);
-    }
-}
 
-void  task2(void* p_arg) {
-    (void)p_arg;
-    while (1) {
-        //printf("%d\t", OSTimeGet());      //print OSTime
-        //printf("Task(2)\n");              //test delay
-        OSTimeDly(6);
-    }
-}
-
-/*
-▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-*                                               HW00
-*********************************************************************************************************
-*/
 
 /*
 *********************************************************************************************************
@@ -1837,7 +1767,7 @@ static  void  OS_SchedNew (void)
     *                                               HW00
     ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
     */
-    if (OSPrioCur == 0) {                                                         //如果OSPrioCur==0 也就是還沒有開始執行
+    if (OSPrioCur == 0) {                                                       //如果OSPrioCur==0 也就是還沒有開始執行
         printf("Tick\t Form Task\t To Task\n");                                 //print表頭
         printf("%d\t %s\t task(%d)\n", OSTimeGet(), "********", OSPrioHighRdy); //print第一行
     }
