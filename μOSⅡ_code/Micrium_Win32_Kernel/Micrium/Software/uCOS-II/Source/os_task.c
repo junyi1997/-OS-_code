@@ -1371,6 +1371,7 @@ void  OS_TaskStkClr (OS_STK  *pbos,
         if ((opt & OS_TASK_OPT_STK_CLR) != 0x0000u) {  /* See if stack needs to be cleared             */
 #if OS_STK_GROWTH == 1u
             while (size > 0u) {                        /* Stack grows from HIGH to LOW memory          */
+                size = 1;
                 size--;
                 *pbos++ = (OS_STK)0;                   /* Clear from bottom of stack and up!           */
             }
