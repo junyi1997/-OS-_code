@@ -487,7 +487,7 @@ INT16U  OSEventPendMulti (OS_EVENT  **pevents_pend,
     OSTCBCur->OSTCBStatPend  = OS_STAT_PEND_OK;
     OSTCBCur->OSTCBDly       = timeout;                 /* Store pend timeout in TCB                   */
     OS_EventTaskWaitMulti(pevents_pend);                /* Suspend task until events or timeout occurs */
-
+    
     OS_EXIT_CRITICAL();
     OS_Sched();                                         /* Find next highest priority task ready       */
     OS_ENTER_CRITICAL();
@@ -872,49 +872,7 @@ void  OSStart (void)
 {
 
 
-    /*
-    *********************************************************************************************************
-    *                                               HW00
-    ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-    */
-    #define TASK_STACKSIZE        2048
-    #define TASK1_PRIORITY        1
-    #define TASK2_PRIORITY        2
-    #define TASK1_ID              1
-    #define TASK2_ID              2
 
-        static  void  task1(void* p_arg);
-        static  void  task2(void* p_arg);
-
-        static  OS_STK  TASK1_STK[TASK_STACKSIZE];
-        static  OS_STK  TASK2_STK[TASK_STACKSIZE];
-
-        OSTaskCreateExt(task1,                               /* Create the startup task*/
-            0,
-            &TASK1_STK[TASK_STACKSIZE - 1],
-            TASK1_PRIORITY,
-            TASK1_ID,
-            &TASK1_STK[0],
-            TASK_STACKSIZE,
-            0,
-            (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
-        OSTaskCreateExt(task2,                               /* Create the startup task*/
-            0,
-            &TASK2_STK[TASK_STACKSIZE - 1],
-            TASK2_PRIORITY,
-            TASK2_ID,
-            &TASK2_STK[0],
-            TASK_STACKSIZE,
-            0,
-            (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
-
-
-        OSTimeSet(0);                                               //OS_Time 歸零
-    /*
-    ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-    *                                               HW00
-    *********************************************************************************************************
-    */
 
 
     if (OSRunning == OS_FALSE) {     
@@ -925,39 +883,10 @@ void  OSStart (void)
         OSTCBHighRdy  = OSTCBPrioTbl[OSPrioHighRdy]; /* Point to highest priority task ready to run    */
         OSTCBCur      = OSTCBHighRdy;
         OSStartHighRdy();                            /* Execute target specific code to start task     */
+        
     }
 }
 
-/*
-*********************************************************************************************************
-*                                               HW00
-▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-*/
-void  task1(void* p_arg) {
-    (void)p_arg;
-    while (1) {
-        //printf("%d\t", OSTimeGet());      //print OSTime
-        //printf("Task(1)\n");              //test delay
-        OSTimeDly(3);
-        //printf("delay3\n");
-    }
-}
-
-void  task2(void* p_arg) {
-    (void)p_arg;
-    while (1) {
-        //printf("%d\t", OSTimeGet());      //print OSTime
-        //printf("Task(2)\n");              //test delay
-        OSTimeDly(6);
-        // printf("delay6\n");
-    }
-}
-
-/*
-▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-*                                               HW00
-*********************************************************************************************************
-*/
 
 
 /*
@@ -1690,6 +1619,7 @@ static  void  OS_InitTCBList (void)
     }
     ptcb1                   = &OSTCBTbl[ix];
     ptcb1->OSTCBNext        = (OS_TCB *)0;                       /* Last OS_TCB                        */
+    //printf("ptcb1：%d\n", ptcb1->OSTCBNext);
 #if OS_TASK_NAME_EN > 0u
     ptcb1->OSTCBTaskName    = (INT8U *)(void *)"?";              /* Unknown name                       */
 #endif
@@ -1837,12 +1767,12 @@ static  void  OS_SchedNew (void)
 
     y             = OSUnMapTbl[OSRdyGrp];
     OSPrioHighRdy = (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]]);
-
+    
     /*
     *********************************************************************************************************
     *                                               HW00
     ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-    */
+    
     if (OSPrioCur == 0) {                                                       //如果OSPrioCur==0 也就是還沒有開始執行
         printf("Tick\t Form Task\t To Task\n");                                 //print表頭
         printf("%d\t %s\t task(%d)\n", OSTimeGet(), "********", OSPrioHighRdy); //print第一行
@@ -1851,12 +1781,29 @@ static  void  OS_SchedNew (void)
         printf("%d\t task(%d)\t task(%d)\n", OSTimeGet(), OSPrioCur, OSPrioHighRdy);
     }
 
-    /*
+    
     ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
     *                                               HW00
     *********************************************************************************************************
     */
 
+    if (OSPrioCur == 0) {
+
+        printf("============ TCB link list ============\n");
+        printf("Task\tPrev_TCB_addr\tTCB_addr\tNext_TCB_addr\n\n");
+        
+        //struct *pointer = OSTCBPrioTbl[2];
+        int* pointer = OSTCBPrioTbl[2];
+        //int* pointer = OSTCBList;
+        printf("pointer 的值：%p\n", pointer);
+        printf("*pointer 的值：%d\n", *pointer);
+        
+
+
+        //printf("%d\t %p\t %p\t %p\n", 2, OSTCBPrioTbl[2]->OSTCBPrev, OSTCBPrioTbl[2], OSTCBPrioTbl[2]->OSTCBNext);
+        //printf("%d\t %p\t %p\t %p\n", 1, OSTCBPrioTbl[1]->OSTCBPrev, OSTCBPrioTbl[1], OSTCBPrioTbl[1]->OSTCBNext);
+        //printf("%d\t %p\t %p\t %p\n", 63, OSTCBPrioTbl[63]->OSTCBPrev, OSTCBPrioTbl[63], OSTCBPrioTbl[63]->OSTCBNext);
+    }
 #else                                            /* We support up to 256 tasks                         */
     INT8U     y;
     OS_PRIO  *ptbl;
@@ -2203,12 +2150,43 @@ INT8U  OS_TCBInit (INT8U    prio,
 #endif
 
         OSTCBInitHook(ptcb);
-
+        
         OS_ENTER_CRITICAL();
         OSTCBPrioTbl[prio] = ptcb;
         OS_EXIT_CRITICAL();
 
         OSTaskCreateHook(ptcb);                            /* Call user defined hook                   */
+
+    /*
+    *********************************************************************************************************
+    *                                               HW01
+    ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+    */
+
+        printf("Task[%3.1d] created, TCB Address %p\n", prio, OSTCBPrioTbl[prio]);
+        printf("-------After TCB[%d] being linked-------\n", prio);
+        
+        printf("Previous TCB point to address %p\n", OSTCBCur);
+        printf("Current  TCB point to address %p\n", OSTCBPrioTbl[prio]);
+        printf("Next     TCB point to address %p\n\n", OSTCBList);
+        
+        /*if (prio == 2) {
+            printf("============ TCB link list ============\n");
+            printf("Task\tPrev_TCB_addr\tTCB_addr\tNext_TCB_addr\n");
+
+            //printf("%d\t %p\t %p\t %p\n", 2, OSTCBPrioTbl[2]->OSTCBPrev, OSTCBPrioTbl[2], OSTCBPrioTbl[2]->OSTCBNext);
+            //printf("%d\t %p\t %p\t %p\n", 1, OSTCBPrioTbl[1]->OSTCBPrev, OSTCBPrioTbl[1], OSTCBPrioTbl[1]->OSTCBNext);
+            //printf("%d\t %p\t %p\t %p\n", 63, OSTCBPrioTbl[63]->OSTCBPrev, OSTCBPrioTbl[63], OSTCBPrioTbl[63]->OSTCBNext);
+
+        }*/
+        
+    /*
+    ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+    *                                               HW01
+    *********************************************************************************************************
+    */
+
+
 
 #if OS_TASK_CREATE_EXT_EN > 0u
 #if defined(OS_TLS_TBL_SIZE) && (OS_TLS_TBL_SIZE > 0u)
