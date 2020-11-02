@@ -1758,7 +1758,8 @@ void  OS_Sched (void)
 *              2) Interrupts are assumed to be disabled when this function is called.
 *********************************************************************************************************
 */
-
+int a[3];
+int ii = 0;
 static  void  OS_SchedNew (void)
 {
 #if OS_LOWEST_PRIO <= 63u                        /* See if we support up to 64 tasks                   */
@@ -1786,20 +1787,26 @@ static  void  OS_SchedNew (void)
     *                                               HW00
     *********************************************************************************************************
     */
-
+    #define LEN(x) sizeof(x) / sizeof(x[0])
     if (OSPrioCur == 0) {
 
         printf("============ TCB link list ============\n");
         printf("Task\tPrev_TCB_addr\tTCB_addr\tNext_TCB_addr\n\n");
         
-        //struct *pointer = OSTCBPrioTbl[2];
-        int* pointer = OSTCBPrioTbl[2];
+        int c = 0;
+        //struct *p,ointer = OSTCBPrioTbl[2];,
+        //int* pointer = OSTCBPrioTbl[2];
         //int* pointer = OSTCBList;
-        printf("pointer 的值：%p\n", pointer);
-        printf("*pointer 的值：%d\n", *pointer);
+        //printf("pointer 的值：%p\n", pointer);
+        //printf("*pointer 的值：%d\n", *pointer);
+
         
-
-
+        for (int i = LEN(a)-1; i >=0 ; i--) {
+            c = a[i];
+            printf("%d\t %p\t %p\t %p\n", c, OSTCBPrioTbl[c]->OSTCBPrev, OSTCBPrioTbl[c], OSTCBPrioTbl[c]->OSTCBNext);
+        }
+        
+        
         //printf("%d\t %p\t %p\t %p\n", 2, OSTCBPrioTbl[2]->OSTCBPrev, OSTCBPrioTbl[2], OSTCBPrioTbl[2]->OSTCBNext);
         //printf("%d\t %p\t %p\t %p\n", 1, OSTCBPrioTbl[1]->OSTCBPrev, OSTCBPrioTbl[1], OSTCBPrioTbl[1]->OSTCBNext);
         //printf("%d\t %p\t %p\t %p\n", 63, OSTCBPrioTbl[63]->OSTCBPrev, OSTCBPrioTbl[63], OSTCBPrioTbl[63]->OSTCBNext);
@@ -2169,7 +2176,8 @@ INT8U  OS_TCBInit (INT8U    prio,
         printf("Previous TCB point to address %p\n", OSTCBCur);
         printf("Current  TCB point to address %p\n", OSTCBPrioTbl[prio]);
         printf("Next     TCB point to address %p\n\n", OSTCBList);
-        
+        a[ii] = prio;
+        ii++;
         /*if (prio == 2) {
             printf("============ TCB link list ============\n");
             printf("Task\tPrev_TCB_addr\tTCB_addr\tNext_TCB_addr\n");
