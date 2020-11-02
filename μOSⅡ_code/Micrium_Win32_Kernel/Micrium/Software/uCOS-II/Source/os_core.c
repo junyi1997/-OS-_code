@@ -872,9 +872,6 @@ void  OSStart (void)
 {
 
 
-
-
-
     if (OSRunning == OS_FALSE) {     
 
         OS_SchedNew();                               /* Find highest priority's task priority number   */
@@ -1758,8 +1755,7 @@ void  OS_Sched (void)
 *              2) Interrupts are assumed to be disabled when this function is called.
 *********************************************************************************************************
 */
-int a[3];
-int ii = 0;
+
 static  void  OS_SchedNew (void)
 {
 #if OS_LOWEST_PRIO <= 63u                        /* See if we support up to 64 tasks                   */
@@ -1787,30 +1783,41 @@ static  void  OS_SchedNew (void)
     *                                               HW00
     *********************************************************************************************************
     */
-    #define LEN(x) sizeof(x) / sizeof(x[0])
+
+
+    /*
+    *********************************************************************************************************
+    *                                               HW01-1
+    ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+    */
     if (OSPrioCur == 0) {
 
-        printf("============ TCB link list ============\n");
-        printf("Task\tPrev_TCB_addr\tTCB_addr\tNext_TCB_addr\n\n");
-        
-        int c = 0;
-        //struct *p,ointer = OSTCBPrioTbl[2];,
-        //int* pointer = OSTCBPrioTbl[2];
-        //int* pointer = OSTCBList;
-        //printf("pointer 的值：%p\n", pointer);
-        //printf("*pointer 的值：%d\n", *pointer);
+        printf("============ TCB link list ============\n");                                                                //print表頭
+        printf("Task\tPrev_TCB_addr\tTCB_addr\tNext_TCB_addr\n");                                                           //print表頭
+        int a = 0;                                                                                                          //宣告a為儲存指標指向OSTCBPrio的暫存器
+        //OS_TCB* pointer = OSTCBList;                                                                                      測試
+        //OS_TCB* pointer = OSTCBPrioTbl[2];                                                                                測試
+        //printf("pointer 的值：%p\n", pointer);                                                                            測試
+        //printf("*pointer 的值：%d\n", pointer->OSTCBPrio);                                                                測試
+        OS_TCB* pointer = OSTCBList;                                                                                        //建立一個指標指向link list結構開始位址
+        a = pointer->OSTCBPrio;                                                                                             //將指標指向OSTCBPrio的值存放於a變數
+        printf("%d\t %p\t %p\t %p\n", a, OSTCBPrioTbl[a]->OSTCBPrev, OSTCBPrioTbl[a], OSTCBPrioTbl[a]->OSTCBNext);          //列印題目要求之格式
+        OS_TCB* pointer1 = OSTCBPrioTbl[a]->OSTCBNext;                                                                      //建立一個指標指向下一個link list結構的位址
+        a = pointer1->OSTCBPrio;                                                                                            //將指標指向OSTCBPrio的值存放於a變數
+        printf("%d\t %p\t %p\t %p\n", a, OSTCBPrioTbl[a]->OSTCBPrev, OSTCBPrioTbl[a], OSTCBPrioTbl[a]->OSTCBNext);          //列印題目要求之格式
+        OS_TCB* pointer2 = OSTCBPrioTbl[a]->OSTCBNext;                                                                      //建立一個指標指向下一個link list結構的位址
+        a = pointer2->OSTCBPrio;                                                                                            //將指標指向OSTCBPrio的值存放於a變數
+        printf("%d\t %p\t %p\t %p\n", a, OSTCBPrioTbl[a]->OSTCBPrev, OSTCBPrioTbl[a], OSTCBPrioTbl[a]->OSTCBNext);          //列印題目要求之格式
 
-        
-        for (int i = LEN(a)-1; i >=0 ; i--) {
-            c = a[i];
-            printf("%d\t %p\t %p\t %p\n", c, OSTCBPrioTbl[c]->OSTCBPrev, OSTCBPrioTbl[c], OSTCBPrioTbl[c]->OSTCBNext);
-        }
-        
-        
-        //printf("%d\t %p\t %p\t %p\n", 2, OSTCBPrioTbl[2]->OSTCBPrev, OSTCBPrioTbl[2], OSTCBPrioTbl[2]->OSTCBNext);
-        //printf("%d\t %p\t %p\t %p\n", 1, OSTCBPrioTbl[1]->OSTCBPrev, OSTCBPrioTbl[1], OSTCBPrioTbl[1]->OSTCBNext);
-        //printf("%d\t %p\t %p\t %p\n", 63, OSTCBPrioTbl[63]->OSTCBPrev, OSTCBPrioTbl[63], OSTCBPrioTbl[63]->OSTCBNext);
     }
+
+    /*
+    ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+    *                                               HW01-1
+    *********************************************************************************************************
+    */
+
+
 #else                                            /* We support up to 256 tasks                         */
     INT8U     y;
     OS_PRIO  *ptbl;
@@ -2166,31 +2173,20 @@ INT8U  OS_TCBInit (INT8U    prio,
 
     /*
     *********************************************************************************************************
-    *                                               HW01
+    *                                               HW01-1
     ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
     */
 
-        printf("Task[%3.1d] created, TCB Address %p\n", prio, OSTCBPrioTbl[prio]);
-        printf("-------After TCB[%d] being linked-------\n", prio);
+        printf("Task[%3.1d] created, TCB Address %p\n", prio, OSTCBPrioTbl[prio]);  //print現在建立的Task編號以及位址
+        printf("-------After TCB[%d] being linked-------\n", prio);                 //print題目需要的表頭
         
-        printf("Previous TCB point to address %p\n", OSTCBCur);
-        printf("Current  TCB point to address %p\n", OSTCBPrioTbl[prio]);
-        printf("Next     TCB point to address %p\n\n", OSTCBList);
-        a[ii] = prio;
-        ii++;
-        /*if (prio == 2) {
-            printf("============ TCB link list ============\n");
-            printf("Task\tPrev_TCB_addr\tTCB_addr\tNext_TCB_addr\n");
-
-            //printf("%d\t %p\t %p\t %p\n", 2, OSTCBPrioTbl[2]->OSTCBPrev, OSTCBPrioTbl[2], OSTCBPrioTbl[2]->OSTCBNext);
-            //printf("%d\t %p\t %p\t %p\n", 1, OSTCBPrioTbl[1]->OSTCBPrev, OSTCBPrioTbl[1], OSTCBPrioTbl[1]->OSTCBNext);
-            //printf("%d\t %p\t %p\t %p\n", 63, OSTCBPrioTbl[63]->OSTCBPrev, OSTCBPrioTbl[63], OSTCBPrioTbl[63]->OSTCBNext);
-
-        }*/
+        printf("Previous TCB point to address %p\n", OSTCBCur);                     //print上一個TCB所在的位址
+        printf("Current  TCB point to address %p\n", OSTCBPrioTbl[prio]);           //print現在TCB所在的位址
+        printf("Next     TCB point to address %p\n\n", OSTCBList);                  //print下一個TCB所在的位址
         
     /*
     ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-    *                                               HW01
+    *                                               HW01-1
     *********************************************************************************************************
     */
 
