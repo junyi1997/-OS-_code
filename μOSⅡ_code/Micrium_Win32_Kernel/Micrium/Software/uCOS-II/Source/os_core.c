@@ -1765,6 +1765,10 @@ static  void  OS_SchedNew (void)
     y             = OSUnMapTbl[OSRdyGrp];
     OSPrioHighRdy = (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]]);
     
+    printf("OSTCBCtxSwCtr¡G%d\n", ptcb->OSTCBCtxSwCtr);
+    printf("OSTCBCyclesTot¡G%d\n", ptcb->OSTCBCyclesTot);
+    printf("OSTCBCyclesStart¡G%d\n", ptcb->OSTCBCyclesStart);
+
     /*
     *********************************************************************************************************
     *                                               HW00

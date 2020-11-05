@@ -85,7 +85,7 @@ static  void  StartupTask (void  *p_arg);
 * Notes       : none
 *********************************************************************************************************
 */
-
+#include <windows.h>
 int  main (void)
 {
 #if OS_TASK_NAME_EN > 0u
@@ -128,14 +128,20 @@ int  main (void)
     #define TASK_STACKSIZE        2048
     #define TASK1_PRIORITY        1
     #define TASK2_PRIORITY        2
+    #define TASK3_PRIORITY        3
     #define TASK1_ID              1
     #define TASK2_ID              2
+    #define TASK3_ID              3
+   
+
 
         static  void  task1(void* p_arg);
         static  void  task2(void* p_arg);
+        static  void  task3(void* p_arg);
 
         static  OS_STK  TASK1_STK[TASK_STACKSIZE];
         static  OS_STK  TASK2_STK[TASK_STACKSIZE];
+        static  OS_STK  TASK3_STK[TASK_STACKSIZE];
 
         OSTaskCreateExt(task1,                               /* Create the startup task*/
             0,
@@ -152,6 +158,16 @@ int  main (void)
             TASK2_PRIORITY,
             TASK2_ID,
             &TASK2_STK[0],
+            TASK_STACKSIZE,
+            0,
+            (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
+
+        OSTaskCreateExt(task3,                               /* Create the startup task*/
+            0,
+            &TASK3_STK[TASK_STACKSIZE - 1],
+            TASK3_PRIORITY,
+            TASK3_ID,
+            &TASK3_STK[0],
             TASK_STACKSIZE,
             0,
             (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
@@ -220,22 +236,43 @@ static  void  StartupTask (void *p_arg)
 void  task1(void* p_arg) {
     (void)p_arg;
     while (1) {
-        //printf("%d\t", OSTimeGet());      //print OSTime
-        //printf("Task(1)\n");              //test delay
-        OSTimeDly(1);
+        printf("%d\t", OSTimeGet());      //print OSTime
+        printf("Task(1)\n");              //test delay
+        OSTimeDly(4);
+        
         //printf("delay3\n");
     }
+    //Sleep(2);
 }
 
 void  task2(void* p_arg) {
     (void)p_arg;
     while (1) {
-        //printf("%d\t", OSTimeGet());      //print OSTime
-        //printf("Task(2)\n");              //test delay
-        OSTimeDly(1);
+        printf("%d\t", OSTimeGet());      //print OSTime
+        printf("Task(2)\n");              //test delay
+        OSTimeDly(8);
+        
         // printf("delay6\n");
     }
+    //Sleep(5);
 }
+/*
+¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶
+*                                               HW00
+*********************************************************************************************************
+*/
+void  task3(void* p_arg) {
+    (void)p_arg;
+    while (1) {
+        //printf("%d\t", OSTimeGet());      //print OSTime
+        //printf("Task(3)\n");              //test delay
+        //OSTimeDly(7);
+        
+        // printf("delay6\n");
+    }
+    //Sleep(7);
+}
+
 
 /*
 ¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶
