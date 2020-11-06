@@ -227,7 +227,7 @@ static  void  StartupTask (void *p_arg)
 }
 
 
-
+int a = 0 , b=0 ,c=0;
 /*
 *********************************************************************************************************
 *                                               HW00
@@ -237,9 +237,15 @@ void  task1(void* p_arg) {
     (void)p_arg;
     while (1) {
         printf("%d\t", OSTimeGet());      //print OSTime
-        printf("Task(1)\n");              //test delay
-        OSTimeDly(4);
-        
+        printf("Task(1)開始\n");              //test delay
+        a = 1;
+        //my_arrival_time(1);
+        OSTimeDly(1);
+        printf("%d\t", OSTimeGet());      //print OSTime
+        printf("Task(1)結束\n");              //test delay
+        a = 0;
+        OSTimeDly(2);
+
         //printf("delay3\n");
     }
     //Sleep(2);
@@ -248,13 +254,21 @@ void  task1(void* p_arg) {
 void  task2(void* p_arg) {
     (void)p_arg;
     while (1) {
-        printf("%d\t", OSTimeGet());      //print OSTime
-        printf("Task(2)\n");              //test delay
-        OSTimeDly(8);
-        
+        if (a == 0) {
+            printf("%d\t", OSTimeGet());      //print OSTime
+            printf("Task(2)開始\n");              //test delay
+            b = 1;
+            //my_arrival_time(3);
+            OSTimeDly(4);
+            printf("%d\t", OSTimeGet());      //print OSTime
+            printf("Task(2)結束\n");              //test delay
+            b = 0;
+            OSTimeDly(3);
+        }
         // printf("delay6\n");
     }
-    //Sleep(5);
+    
+    //Sleep(1);
 }
 /*
 ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
