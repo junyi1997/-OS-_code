@@ -119,15 +119,32 @@ int  main (void)
 #endif
 
 */
+    /*
+    *********************************************************************************************************
+    *                                               Project1-2
+    ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+    */
 
+    //int resp_t1[2], resp_t2[2];
+    //int input_t1=0, input_t2=0;
+    int task1_in[3] = { 0, 8, 15 };
+    int task2_in[3] = { 0, 2, 5 };
+    int task3_in[3] = { 0, 0, 0 };
+
+    /*
+    ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+    *                                               Project1-2
+    *********************************************************************************************************
+    */
     /*
     *********************************************************************************************************
     *                                               HW00
     ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
     */
+
     #define TASK_STACKSIZE        2048
-    #define TASK1_PRIORITY        1
-    #define TASK2_PRIORITY        2
+    #define TASK1_PRIORITY        2
+    #define TASK2_PRIORITY        1
     #define TASK3_PRIORITY        3
     #define TASK1_ID              1
     #define TASK2_ID              2
@@ -161,8 +178,8 @@ int  main (void)
             TASK_STACKSIZE,
             0,
             (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
-
-        OSTaskCreateExt(task3,                               /* Create the startup task*/
+        /*
+        OSTaskCreateExt(task3,                               
             0,
             &TASK3_STK[TASK_STACKSIZE - 1],
             TASK3_PRIORITY,
@@ -170,7 +187,9 @@ int  main (void)
             &TASK3_STK[0],
             TASK_STACKSIZE,
             0,
-            (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
+            (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));        
+        */
+
 
 
         OSTimeSet(0);                                               //OS_Time 歸零
@@ -226,49 +245,100 @@ static  void  StartupTask (void *p_arg)
     }
 }
 
-
 /*
 *********************************************************************************************************
 *                                               HW00
 ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-*/
+
 void  task1(void* p_arg) {
     (void)p_arg;
     while (1) {
-        
-        printf("%d\t", OSTimeGet());      //print OSTime
-        printf("Task(1)開始\n");              //test delay
-        Sleep(1000);
-        printf("%d\t", OSTimeGet());      //print OSTime
-        printf("\t\t\tTask(1)結束\n");              //test delay 
-        OSTimeDly(2);
-
+        //printf("%d\t", OSTimeGet());      //print OSTime
+        //printf("Task(1)\n");              //test delay
+        OSTimeDly(1);
         //printf("delay3\n");
     }
-    //Sleep(2);
 }
 
 void  task2(void* p_arg) {
     (void)p_arg;
     while (1) {
-        
-        printf("%d\t", OSTimeGet());      //print OSTime
-        printf("Task(2)開始\n");              //test delay
-        Sleep(3000);
-        printf("%d\t", OSTimeGet());      //print OSTime
-        printf("\t\t\tTask(2)結束\n");              //test delay
-        OSTimeDly(3);
-
-    // printf("delay6\n");
+        //printf("%d\t", OSTimeGet());      //print OSTime
+        //printf("Task(2)\n");              //test delay
+        OSTimeDly(1);
+        // printf("delay6\n");
     }
-    
-    //Sleep(1);
 }
-/*
+
 ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 *                                               HW00
 *********************************************************************************************************
 */
+
+
+
+/*
+*********************************************************************************************************
+*                                               Project1-2
+▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+*/
+
+//int resp_t1[2], resp_t2[2];
+//int input_t1=0, input_t2=0;
+int task1_in[3] = { 0, 8, 15 };
+int task2_in[3] = { 0, 2, 5 };
+int task3_in[3] = { 0, 0, 0 };
+
+
+
+void  task1(void* p_arg) {
+    (void)p_arg;
+    while (1) {
+        //OSTimeDly(task1_in[0]);
+        //printf("%d\t", OSTimeGet());      //print OSTime
+        //printf("Task(1)開始,第%d次\n", input_t1);              //test delay
+        //resp_t1[0] = OSTimeGet();
+        //printf("%d\t", OSTimeGet());      //print OSTime
+        //printf("\t\t\tTask(1)結束\n");              //test delay 
+        //resp_t1[1] = OSTimeGet();
+        //input_t1++;
+        //printf("Task(1)執行時間：%d\n", resp_t1[1]- resp_t1[0]);
+
+        Sleep(task1_in[1]*1000);
+        
+        if (task1_in[2] > task2_in[2]) {
+            OSTimeDly(task1_in[2] - (task1_in[2] / task2_in[2] * task2_in[1] + task1_in[1]) + task2_in[1]);
+        }
+        else {
+            OSTimeDly(task1_in[2] - task1_in[1]);
+        }
+        
+
+    }
+}
+
+void  task2(void* p_arg) {
+    (void)p_arg;
+    while (1) {
+        //OSTimeDly(task2_in[0]);
+        //printf("%d\t", OSTimeGet());      //print OSTime
+        //printf("Task(2)開始,第%d次\n", input_t2);             //test delay
+        //resp_t2[0] = OSTimeGet();
+        //printf("%d\t", OSTimeGet());      //print OSTime
+        //printf("\t\t\tTask(2)結束\n");              //test delay
+        //resp_t2[1] = OSTimeGet();
+        //printf("Task(2)執行時間：%d\n", resp_t2[1] - input_t2* task2_in[2]);
+        //input_t2++;
+        Sleep(task2_in[1] * 1000);
+        if (task2_in[2] > task1_in[2]) {
+            OSTimeDly(task2_in[2] - (task2_in[2] / task1_in[2] * task1_in[1] + task2_in[1]) + task1_in[1]);
+        }
+        else {
+            OSTimeDly(task2_in[2] - task2_in[1]);
+        }
+    }
+}
+/*
 void  task3(void* p_arg) {
     (void)p_arg;
     while (1) {
@@ -280,11 +350,13 @@ void  task3(void* p_arg) {
     }
     //Sleep(7);
 }
+*/
+
 
 
 /*
 ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-*                                               HW00
+*                                               Project1-2
 *********************************************************************************************************
 */
 

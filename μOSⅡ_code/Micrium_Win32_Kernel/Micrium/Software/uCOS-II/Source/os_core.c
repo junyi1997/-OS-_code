@@ -1756,6 +1756,24 @@ void  OS_Sched (void)
 *********************************************************************************************************
 */
 
+
+/*
+*********************************************************************************************************
+*                                               Project1-2
+▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+*/
+int resp_t1, resp_t2;
+int ctx1, ctx2;
+int input_t1 = 0, input_t2 = 0, input_t11 = 0, input_t21 = 0;
+int task1_in1[3] = { 0, 8, 15 };
+int task2_in1[3] = { 0, 2, 5 };
+int task3_in1[3] = { 0, 0, 0 };
+/*
+▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+*                                               Project1-2
+*********************************************************************************************************
+*/
+
 static  void  OS_SchedNew (void)
 {
 #if OS_LOWEST_PRIO <= 63u                        /* See if we support up to 64 tasks                   */
@@ -1787,7 +1805,7 @@ static  void  OS_SchedNew (void)
 
     /*
     *********************************************************************************************************
-    *                                               HW01-1
+    *                                               Project1-1
     ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
     
     if (OSPrioCur == 0) {
@@ -1813,10 +1831,92 @@ static  void  OS_SchedNew (void)
 
     
     ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-    *                                               HW01-1
+    *                                               Project1-1
     *********************************************************************************************************
     */
 
+    /*
+    *********************************************************************************************************
+    *                                               Project1-2
+    ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+    */
+    if (OSPrioCur == 0) {                                                                            //如果OSPrioCur==0 也就是還沒有開始執行
+        printf("task set 1 = {(%d,%d,%d),(%d,%d,%d)} \n\n", task1_in1[0], task1_in1[1], task1_in1[2], task2_in1[0], task2_in1[1], task2_in1[2]);
+        printf("Tick\t     Event    \t CurrentTask ID\t NextTask ID\t ResponseTime\t # of ContextSwitch\n"); //print表頭
+    }
+    else if (OSPrioCur != OSPrioHighRdy) {                                                           //如果OSPrioCur不等於最高優先前的
+        ctx1++; ctx2++;
+        if (OSPrioCur == 63) {
+            ctx2=0;
+            if (OSPrioHighRdy == 1) {
+                printf("%d\t  %s\t task(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", OSPrioCur, OSPrioHighRdy, input_t1);
+            }
+            else {
+                printf("%d\t  %s\t task(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", OSPrioCur, OSPrioHighRdy, input_t2);
+            }
+
+        }
+        else if (OSPrioHighRdy == 63) {
+            ctx1 = 0;
+            if (OSPrioHighRdy == 1) {
+                printf("%d\t  %s\t task(%d)(%d)\t task(%d)\t      %d\t\t\t %d\n", OSTimeGet(), "Completion", OSPrioCur, input_t1, OSPrioHighRdy, OSTimeGet() - input_t1 * task1_in1[2], ctx1);
+                ctx1 = 0;
+            }
+            else {
+                printf("%d\t  %s\t task(%d)(%d)\t task(%d)\t      %d\t\t\t %d\n", OSTimeGet(), "Completion", OSPrioCur, input_t2, OSPrioHighRdy, OSTimeGet() - input_t2 * task2_in1[2], ctx2);
+                ctx2 = 0;
+                //printf("ResponseTime2：%d\n", input_t2 * task2_in1[2]);
+            }
+
+        }
+        else if (OSPrioCur==2 && OSPrioHighRdy == 1 && task2_in1[2]> task1_in1[2]) {
+            if (OSPrioHighRdy == 1) {
+                printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", OSPrioCur, input_t2, OSPrioHighRdy, input_t1);
+            }
+            else {
+                printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", OSPrioCur, input_t1, OSPrioHighRdy, input_t2);
+            }
+        }
+        else if (OSPrioCur == 1 && OSPrioHighRdy == 2 && task1_in1[2] > task2_in1[2]) {
+            if (OSPrioHighRdy == 1) {
+                printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", OSPrioCur, input_t2, OSPrioHighRdy, input_t1);
+            }
+            else {
+                printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", OSPrioCur, input_t1, OSPrioHighRdy, input_t2);
+            }
+        }
+        else {
+            if (task1_in1[2] > task2_in1[2]) {
+                printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\t      %d\t\t\t %d\n", OSTimeGet(), "Completion", OSPrioCur, input_t2, OSPrioHighRdy, input_t1, OSTimeGet() - input_t2 * task2_in1[2], ctx2);
+                ctx2 = 0;
+            }
+            else {
+                printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\t      %d\t\t\t %d\n", OSTimeGet(), "Completion", OSPrioCur, input_t1, OSPrioHighRdy, input_t2, OSTimeGet() - input_t1 * task1_in1[2], ctx1);
+                ctx1 = 0;
+                //printf("ResponseTime1：%d\n", input_t1* task1_in1[2]);
+            }
+        }
+
+        if (OSPrioCur == 1) {
+            input_t11++;
+            //printf("input_t21：%d\ttask2_in1[2]* input_t2：%d\n", input_t21, task2_in1[2] * input_t2);
+            if (task2_in1[2] > task1_in1[2]) { input_t1++; }
+            else if (task1_in1[2] > task2_in1[2]) { if (input_t11 > 1 && OSTimeGet() > task1_in1[2] * input_t1) { input_t1++; input_t11 = 0; } }
+        }
+        else if (OSPrioCur == 2) { 
+            input_t21++;
+            //printf("input_t21=%d\tinput_t2=%d\n", input_t21, input_t2);
+            //printf("tick：%d\t input_t21：%d\t task2_in1[2] * input_t2：%d\n", OSTimeGet(), input_t21, task2_in1[2] * input_t2);
+            if (task1_in1[2] > task2_in1[2]) { input_t2++; }
+            else if (task2_in1[2] > task1_in1[2]) { if (input_t21 > (task2_in1[2]/ task1_in1[2]-1) && OSTimeGet() > task2_in1[2] * input_t2) { input_t2++; input_t21 = 0;} }
+        }
+    }
+
+    /*
+    ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+    *                                               Project1-2
+    *********************************************************************************************************
+    */
 
 #else                                            /* We support up to 256 tasks                         */
     INT8U     y;
@@ -2173,7 +2273,7 @@ INT8U  OS_TCBInit (INT8U    prio,
 
     /*
     *********************************************************************************************************
-    *                                               HW01-1
+    *                                               Project1-1
     ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
     
 
@@ -2186,7 +2286,7 @@ INT8U  OS_TCBInit (INT8U    prio,
         
     
     ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-    *                                               HW01-1
+    *                                               Project1-1
     *********************************************************************************************************
     */
 
