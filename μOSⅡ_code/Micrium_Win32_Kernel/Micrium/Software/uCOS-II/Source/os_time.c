@@ -82,6 +82,35 @@ void  OSTimeDly (INT32U ticks)
     }
 }
 
+void  OSTimeDly_arr(INT32U ticks ,OS_TCB *task_123)
+{
+    INT8U      y;
+#if OS_CRITICAL_METHOD == 3u                     /* Allocate storage for CPU status register           */
+    OS_CPU_SR  cpu_sr = 0u;
+#endif
+
+
+    if (OSIntNesting > 0u) {                     /* See if trying to call from an ISR                  */
+        return;
+    }
+    if (OSLockNesting > 0u) {                    /* See if called with scheduler locked                */
+        return;
+    }
+    if (ticks > 0u) {                            /* 0 means no delay!                                  */
+        OS_ENTER_CRITICAL();
+        y = task_123->OSTCBY;        /* Delay current task                                 */
+        OSRdyTbl[y] &= (OS_PRIO)~task_123->OSTCBBitX;
+        OS_TRACE_TASK_SUSPENDED(task_123);
+        if (OSRdyTbl[y] == 0u) {
+            OSRdyGrp &= (OS_PRIO)~task_123->OSTCBBitY;
+        }
+        task_123->OSTCBDly = ticks;              /* Load ticks in TCB                                  */
+        OS_TRACE_TASK_DLY(ticks);
+        OS_EXIT_CRITICAL();
+        //OS_Sched();                              /* Find next task to run!                             */
+    }
+}
+
 void  my_arrival_time(INT32U ticks)
 {
     INT8U      y;

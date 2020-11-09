@@ -94,8 +94,8 @@ static  void  StartupTask (void  *p_arg);
 
 //int resp_t1[2], resp_t2[2];
 //int input_t1=0, input_t2=0;
-int task2_in[3] = { 0, 8, 15 };
-int task1_in[3] = { 0, 2, 5 };
+int task1_in[3] = { 1, 2, 3 };
+int task2_in[3] = { 0, 4, 6 };
 int task3_in[3] = { 0, 0, 0 };
 
 /*
@@ -286,8 +286,8 @@ void  task2(void* p_arg) {
 ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
 */
 
-//int resp_t1[2], resp_t2[2];
-//int input_t1=0, input_t2=0;
+int resp1_t1[2], resp1_t2[2];
+int input1_t1=0, input1_t2=0;
 //int task2_in[3] = { 0, 8, 15 };
 //int task1_in[3] = { 0, 2, 5 };
 //int task3_in[3] = { 0, 0, 0 };
@@ -297,15 +297,16 @@ void  task2(void* p_arg) {
 void  task1(void* p_arg) {
     (void)p_arg;
     while (1) {
+        //OSTimeDly_arr(task1_in[0]);
         //OSTimeDly(task1_in[0]);
-        //printf("%d\t", OSTimeGet());      //print OSTime
-        //printf("Task(1)開始,第%d次\n", input_t1);              //test delay
-        //resp_t1[0] = OSTimeGet();
+        printf("%d\t", OSTimeGet());      //print OSTime
+        printf("Task(1)開始,第%d次\n", input1_t1);              //test delay
+        resp1_t1[0] = OSTimeGet();
         //printf("%d\t", OSTimeGet());      //print OSTime
         //printf("\t\t\tTask(1)結束\n");              //test delay 
-        //resp_t1[1] = OSTimeGet();
-        //input_t1++;
-        //printf("Task(1)執行時間：%d\n", resp_t1[1]- resp_t1[0]);
+        resp1_t1[1] = OSTimeGet();
+        input1_t1++;
+        //printf("Task(1)執行時間：%d\n", resp1_t1[1]- resp1_t1[0]);
 
         Sleep(task1_in[1]*1000);
         
@@ -323,15 +324,16 @@ void  task1(void* p_arg) {
 void  task2(void* p_arg) {
     (void)p_arg;
     while (1) {
+        //OSTimeDly_arr(task2_in[0]);
         //OSTimeDly(task2_in[0]);
-        //printf("%d\t", OSTimeGet());      //print OSTime
-        //printf("Task(2)開始,第%d次\n", input_t2);             //test delay
-        //resp_t2[0] = OSTimeGet();
+        printf("%d\t", OSTimeGet());      //print OSTime
+        printf("Task(2)開始,第%d次\n", input1_t2);             //test delay
+        resp1_t2[0] = OSTimeGet();
         //printf("%d\t", OSTimeGet());      //print OSTime
         //printf("\t\t\tTask(2)結束\n");              //test delay
-        //resp_t2[1] = OSTimeGet();
-        //printf("Task(2)執行時間：%d\n", resp_t2[1] - input_t2* task2_in[2]);
-        //input_t2++;
+        resp1_t2[1] = OSTimeGet();
+        //printf("Task(2)執行時間：%d\n", resp1_t2[1] - input1_t2* task2_in[2]);
+        input1_t2++;
         Sleep(task2_in[1] * 1000);
         if (task2_in[2] > task1_in[2]) {
             OSTimeDly(task2_in[2] - (task2_in[2] / task1_in[2] * task1_in[1] + task2_in[1]) + task1_in[1]);
