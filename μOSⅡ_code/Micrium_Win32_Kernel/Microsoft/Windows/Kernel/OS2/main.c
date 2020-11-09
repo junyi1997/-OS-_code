@@ -94,9 +94,9 @@ static  void  StartupTask (void  *p_arg);
 
 //int resp_t1[2], resp_t2[2];
 //int input_t1=0, input_t2=0;
-int task1_in[3] = { 0, 8, 15 };
-int task2_in[3] = { 0, 2, 5 };
-int task3_in[3] = { 0, 0, 0 };
+int task1_in[3] = { 0, 4, 6 };
+int task2_in[3] = { 2, 2, 10 };
+int task3_in[3] = { 1, 1, 5 };
 
 /*
 ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
@@ -146,8 +146,52 @@ int  main (void)
     */
 
     #define TASK_STACKSIZE        2048
-    #define TASK1_PRIORITY        2
-    #define TASK2_PRIORITY        1
+    if (task3_in[2] == 0) {
+        if (task2_in[2] > task1_in[2]) {
+            #define TASK1_PRIORITY        1
+            #define TASK2_PRIORITY        2
+        }
+        else if (task1_in[2] > task2_in[2]) {
+            #define TASK1_PRIORITY        2
+            #define TASK2_PRIORITY        1
+        }
+        
+    }
+    else {
+        if (task3_in[2] > task2_in[2] > task1_in[2]) {
+            #define TASK1_PRIORITY        1
+            #define TASK2_PRIORITY        2
+            #define TASK3_PRIORITY        3
+        }
+        else if (task2_in[2] > task3_in[2] > task1_in[2]) {
+            #define TASK1_PRIORITY        1
+            #define TASK2_PRIORITY        3
+            #define TASK3_PRIORITY        2
+        }
+        else if (task3_in[2] > task1_in[2] > task2_in[2]) {
+            #define TASK1_PRIORITY        2
+            #define TASK2_PRIORITY        1
+            #define TASK3_PRIORITY        3
+        }
+        else if (task1_in[2] > task3_in[2] > task2_in[2]) {
+            #define TASK1_PRIORITY        2
+            #define TASK2_PRIORITY        3
+            #define TASK3_PRIORITY        1
+        }
+        else if (task2_in[2] > task1_in[2] > task3_in[2]) {
+            #define TASK1_PRIORITY        3
+            #define TASK2_PRIORITY        1
+            #define TASK3_PRIORITY        2
+        }
+        else if (task1_in[2] > task2_in[2] > task3_in[2]) {
+            #define TASK1_PRIORITY        3
+            #define TASK2_PRIORITY        2
+            #define TASK3_PRIORITY        1
+        }
+
+    }
+
+
     #define TASK3_PRIORITY        3
     #define TASK1_ID              1
     #define TASK2_ID              2
@@ -309,11 +353,11 @@ void  task1(void* p_arg) {
         //printf("Task(1)執行時間：%d\n", resp1_t1[1]- resp1_t1[0]);
 
         Sleep(task1_in[1]*1000);
-        
-        if (task1_in[2] > task2_in[2]) {
-            OSTimeDly(task1_in[2] - (task1_in[2] / task2_in[2] * task2_in[1] + task1_in[1]) + task2_in[1]);
+        if (task1_in[2] > task2_in[2] && task1_in[2] > task3_in[2]) {
+            if (task2_in[0] == 0) {OSTimeDly(task1_in[2] - (task1_in[2] / task2_in[2] * task2_in[1] + task1_in[1]) + task2_in[1]);}
+            else { OSTimeDly(task1_in[2] - (task1_in[2] / task2_in[2] * task2_in[1] + task1_in[1])); }
         }
-        else {
+        else if (task1_in[2] < task2_in[2] && task1_in[2] < task3_in[2]) {
             OSTimeDly(task1_in[2] - task1_in[1]);
 
         }
@@ -336,10 +380,12 @@ void  task2(void* p_arg) {
         //printf("Task(2)執行時間：%d\n", resp1_t2[1] - input1_t2* task2_in[2]);
         //input1_t2++;
         Sleep(task2_in[1] * 1000);
-        if (task2_in[2] > task1_in[2]) {
-            OSTimeDly(task2_in[2] - (task2_in[2] / task1_in[2] * task1_in[1] + task2_in[1]) + task1_in[1]);
+        if (task2_in[2] > task1_in[2] && task2_in[2] > task3_in[2]) {
+            if (task1_in[0] == 0) {OSTimeDly(task2_in[2] - (task2_in[2] / task1_in[2] * task1_in[1] + task2_in[1]) + task1_in[1]);}
+            else { OSTimeDly(task2_in[2] - (task2_in[2] / task1_in[2] * task1_in[1] + task2_in[1])); }
+            
         }
-        else {
+        else if(task2_in[2] < task1_in[2] && task2_in[2] < task3_in[2]) {
             OSTimeDly(task2_in[2] - task2_in[1]);
         }
     }

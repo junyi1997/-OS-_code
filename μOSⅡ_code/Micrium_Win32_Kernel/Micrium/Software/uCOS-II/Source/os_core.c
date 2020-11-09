@@ -38,9 +38,9 @@
 int resp_t1, resp_t2;
 int ctx1=0, ctx2=0;
 int input_t1 = 0, input_t2 = 0, input_t11 = 0, input_t21 = 0;
-int task1_in1[3] = { 0, 8, 15 };
-int task2_in1[3] = { 0, 2, 5 };
-int task3_in1[3] = { 0, 0, 0 };
+int task1_in1[3] = { 0, 4, 6 };
+int task2_in1[3] = { 2, 2, 10 };
+int task3_in1[3] = { 1, 1, 5 };
 /*
 ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 *                                               Project1-2
@@ -1847,15 +1847,20 @@ static  void  OS_SchedNew (void)
     *                                               Project1-2
     ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
     */
+
     if (OSPrioCur == 0) {                                                                            //如果OSPrioCur==0 也就是還沒有開始執行
         printf("task1 set = (%d,%d,%d)\t task2 set = (%d,%d,%d) \n\n", task1_in1[0], task1_in1[1], task1_in1[2], task2_in1[0], task2_in1[1], task2_in1[2]);
         printf("Tick\t     Event    \t CurrentTask ID\t NextTask ID\t ResponseTime\t # of ContextSwitch\n"); //print表頭
     }
     else if (OSPrioCur != OSPrioHighRdy) {                                                           //如果OSPrioCur不等於最高優先前的
-        if (OSPrioCur != 63 || OSPrioHighRdy != 63) {ctx1++; ctx2++;}
+        if (OSPrioCur != 63) {
+            ctx1++; ctx2++;
+        }
         
         if (OSPrioCur == 63) {
-            //ctx2=0;
+            if (task2_in1[2] > task1_in1[2]) { ctx1 = 0; }
+            else {ctx2=0;}
+            
             if (OSPrioHighRdy == 1) {
                 if (task2_in1[2] > task1_in1[2]) {
                     printf("%d\t  %s\t task(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", OSPrioCur, 1, input_t1);
@@ -1962,8 +1967,8 @@ static  void  OS_SchedNew (void)
                 if (task2_in1[2] > task1_in1[2]) { input_t1++; }
                 else if (task1_in1[2] > task2_in1[2]) { if (input_t11 > (task1_in1[2] / task2_in1[2] ) && OSTimeGet() > task1_in1[2] * input_t1) { input_t1++; input_t11 = 0; } }
             }
+           
             
-            /*
             else {
                 input_t21++;
                 //printf("input_t21=%d\tinput_t2=%d\n", input_t21, input_t2);
@@ -1971,7 +1976,7 @@ static  void  OS_SchedNew (void)
                 if (task1_in1[2] > task2_in1[2]) { input_t2++; }
                 else if (task2_in1[2] > task1_in1[2]) { if (input_t21 > (task2_in1[2] / task1_in1[2] - 1) && OSTimeGet() > task2_in1[2] * input_t2) { input_t2++; input_t21 = 0; } }
             }
-            */
+            
             
             
         }
@@ -1983,14 +1988,14 @@ static  void  OS_SchedNew (void)
                 else if (task2_in1[2] > task1_in1[2]) { if (input_t21 > (task2_in1[2] / task1_in1[2] - 1) && OSTimeGet() > task2_in1[2] * input_t2) { input_t2++; input_t21 = 0; } }
             }
             
-            /*
+            
             else {
                 input_t11++;
-                //printf("input_t21：%d\ttask2_in1[2]* input_t2：%d\n", input_t21, task2_in1[2] * input_t2);
+                //printf("input_t1 * task1_in1[2]=%d\n", input_t1* task1_in1[2]);
                 if (task2_in1[2] > task1_in1[2]) { input_t1++; }
-                else if (task1_in1[2] > task2_in1[2]) { if (input_t11 > 1 && OSTimeGet() > task1_in1[2] * input_t1) { input_t1++; input_t11 = 0; } }
+                else if (task1_in1[2] > task2_in1[2]) { if (input_t11 > (task1_in1[2] / task2_in1[2]) && OSTimeGet() > task1_in1[2] * input_t1) { input_t1++; input_t11 = 0; } }
             }
-            */
+            
 
         }
     }
