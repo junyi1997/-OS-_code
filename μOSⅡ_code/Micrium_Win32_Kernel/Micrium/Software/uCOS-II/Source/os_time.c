@@ -81,7 +81,11 @@ void  OSTimeDly (INT32U ticks)
         OS_Sched();                              /* Find next task to run!                             */
     }
 }
-
+/*
+*********************************************************************************************************
+*                                               Project1-2
+¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿
+*/
 void  OSTimeDly_arr(INT32U ticks ,OS_TCB *task_123)
 {
     INT8U      y;
@@ -110,34 +114,11 @@ void  OSTimeDly_arr(INT32U ticks ,OS_TCB *task_123)
         //OS_Sched();                              /* Find next task to run!                             */
     }
 }
-
-void  my_arrival_time(INT32U ticks)
-{
-    INT8U      y;
-#if OS_CRITICAL_METHOD == 3u                     /* Allocate storage for CPU status register           */
-    OS_CPU_SR  cpu_sr = 0u;
-#endif
-    if (OSIntNesting > 0u) {                     /* See if trying to call from an ISR                  */
-        return;
-    }
-    if (OSLockNesting > 0u) {                    /* See if called with scheduler locked                */
-        return;
-    }
-    if (ticks > 0u) {                            /* 0 means no delay!                                  */
-        OS_ENTER_CRITICAL();
-        y = OSTCBCur->OSTCBY;                    /* Delay current task                                 */
-        OSRdyTbl[y] &= (OS_PRIO)~OSTCBCur->OSTCBBitX;
-        OS_TRACE_TASK_SUSPENDED(OSTCBCur);
-        if (OSRdyTbl[y] == 0u) {
-            OSRdyGrp &= (OS_PRIO)~OSTCBCur->OSTCBBitY;
-        }
-        OSTCBCur->OSTCBDly = ticks;              /* Load ticks in TCB                                  */
-        OS_TRACE_TASK_DLY(ticks);
-        OS_EXIT_CRITICAL();
-        //OSTimeDly(ticks);
-    }
-    if (ticks == 0) {OS_Sched();                /* Find next task to run!                             */}
-}
+/*
+¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶
+*                                               Project1-2
+*********************************************************************************************************
+*/
 
 /*
 *********************************************************************************************************

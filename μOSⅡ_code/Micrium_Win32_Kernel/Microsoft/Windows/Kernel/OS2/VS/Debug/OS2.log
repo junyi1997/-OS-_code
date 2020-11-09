@@ -1,3 +1,5 @@
 ﻿  os_core.c
 D:\10901\嵌入式作業系統實作\μOSⅡ_code\Micrium_Win32_Kernel\Micrium\Software\uCOS-II\Source\os_core.c(894,22): warning C4013: 'OSTimeDly_arr' 未定義; 假設 extern 傳回整數
+D:\10901\嵌入式作業系統實作\μOSⅡ_code\Micrium_Win32_Kernel\Micrium\Software\uCOS-II\Source\os_core.c(1963,119): warning C4018: '>': signed/unsigned 不相符
+D:\10901\嵌入式作業系統實作\μOSⅡ_code\Micrium_Win32_Kernel\Micrium\Software\uCOS-II\Source\os_core.c(1983,122): warning C4018: '>': signed/unsigned 不相符
   OS2.vcxproj -> D:\10901\嵌入式作業系統實作\μOSⅡ_code\Micrium_Win32_Kernel\Microsoft\Windows\Kernel\OS2\VS\Debug\OS2.exe
