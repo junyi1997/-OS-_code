@@ -1,0 +1,6 @@
+Tick         Event       CurrentTask ID  NextTask ID     ResponseTime    # of ContextSwitch
+8         Completion     task(1)(0)      task(63)()           0                  0
+8         Preemption     task(1)(0)      task(63)()
+8         MissDeadline   task(1)(0)      ---------------------
+Aperiodic job(0) arrives and sets CUS server's deadline as 
+Aperiodic job(0) is finish.

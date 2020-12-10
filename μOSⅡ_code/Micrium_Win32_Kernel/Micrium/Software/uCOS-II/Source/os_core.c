@@ -890,10 +890,12 @@ void  OSStart (void)
 
 
     if (OSRunning == OS_FALSE) {
-
+        /*
         OSTimeDly_arr(task1_in1[0], OSTCBPrioTbl[1]);//設定task1的arrival time
         OSTimeDly_arr(task2_in1[0], OSTCBPrioTbl[2]);//設定task2的arrival time
         OSTimeDly_arr(task3_in1[0], OSTCBPrioTbl[3]);//設定task3的arrival time
+        */
+        
 
         
         OS_SchedNew();                               /* Find highest priority's task priority number   */
@@ -1789,7 +1791,8 @@ static  void  OS_SchedNew (void)
 
     y             = OSUnMapTbl[OSRdyGrp];
     OSPrioHighRdy = (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]]);
-    
+
+    //HW0
     /*
     *********************************************************************************************************
     *                                               HW00
@@ -1809,7 +1812,7 @@ static  void  OS_SchedNew (void)
     *********************************************************************************************************
     */
 
-
+    //Project1-1
     /*
     *********************************************************************************************************
     *                                               Project1-1
@@ -1841,7 +1844,7 @@ static  void  OS_SchedNew (void)
     *                                               Project1-1
     *********************************************************************************************************
     */
-
+    //Project1-2  task2個用
     /*
     *********************************************************************************************************
     *                                               Project1-2  task2個用
@@ -1975,12 +1978,12 @@ static  void  OS_SchedNew (void)
     *                                               Project1-2
     *********************************************************************************************************
     */
-
+    //Project1-2  3個task用--針對Task set 4 TaskID 1-->2-->3 PRIORITY 2-->3-->1
     /*
     *********************************************************************************************************
     *                                               Project1-2  3個task用--針對Task set 4 TaskID 1-->2-->3 PRIORITY 2-->3-->1
     ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-    */
+    
 
     if(OSPrioCur == 0) {                                                                            //如果OSPrioCur==0 也就是還沒有開始執行
         printf("task1 set = (%d,%d,%d)\t task2 set = (%d,%d,%d)\t task3 set = (%d,%d,%d) \n\n", task1_in1[0], task1_in1[1], task1_in1[2], task2_in1[0], task2_in1[1], task2_in1[2], task3_in1[0], task3_in1[1], task3_in1[2]);//print題目要求
@@ -2026,13 +2029,142 @@ static  void  OS_SchedNew (void)
         resp_t2 = task2_in1[2] / task3_in1[2] * task3_in1[1] + task2_in1[1]+task2_in1[1];
         resp_t1 = task2_in1[1] + task3_in1[1];
     }
-    /*
+    
     ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
     *                                               Project1-2  3個task用--針對Task set 4 TaskID 1-->2-->3 PRIORITY 2-->3-->1
     *********************************************************************************************************
     */
 
+    /*
+    *********************************************************************************************************
+    *                                               Project1-2
+    ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+    
+    if (OSTimeGet() % 6 == 0 && OSTimeGet() != 0) {//如果OSTimeGet()為6的整除 且 OSTimeGet()不為零  針對task set 3在OSTimeGet()為6的倍數時，因為沒有contextswitch，所以寫這個特例來符合題目要求
+        printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 2, input_t2, 2, input_t2 + 1, resp_t2, ctx2 + 1);//print題目要求
+        ctx2 = 0;//contextswitch2歸零
+    }
+    //task set 3 專用
 
+    if (OSPrioCur == 0) {                                                                            //如果OSPrioCur==0 也就是還沒有開始執行
+        printf("task1 set = (%d,%d,%d)\t task2 set = (%d,%d,%d) \n\n", task1_in1[0], task1_in1[1], task1_in1[2], task2_in1[0], task2_in1[1], task2_in1[2]);//print題目要求
+        printf("Tick\t     Event    \t CurrentTask ID\t NextTask ID\t ResponseTime\t # of ContextSwitch\n"); //print題目要求
+    }
+    else if (OSPrioCur != OSPrioHighRdy) {                                                           //如果OSPrioCur不等於最高優先前的
+        if (OSPrioCur != 63) {//如果現在正在執行的taskID 不為63時，才計數contextswitch
+            ctx1++; ctx2++;//計數contextswitch
+        }
+
+        if (OSPrioCur == 63) {//如果現在正在執行的taskID 為63
+            if (task2_in1[2] > task1_in1[2]) { ctx1 = 0; }//計數contextswitch歸零
+            else { ctx2 = 0; }//計數contextswitch歸零
+
+            if (OSPrioHighRdy == 1) {//如果下一個要執行的taskID 為1
+                if (task2_in1[2] > task1_in1[2]) {//如果task2週期大於task1,taskID要對調
+                    printf("%d\t  %s\t task(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", OSPrioCur, 1, input_t1);//print題目要求
+                }
+                else {
+                    printf("%d\t  %s\t task(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", OSPrioCur, 2, input_t2);//print題目要求
+                }
+
+            }
+            else {
+                if (task2_in1[2] > task1_in1[2]) {//如果task2週期大於task1,taskID要對調
+                    printf("%d\t  %s\t task(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", OSPrioCur, 2, input_t2);//print題目要求
+                }
+                else {
+                    printf("%d\t  %s\t task(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", OSPrioCur, 1, input_t1);//print題目要求
+                }
+
+            }
+
+        }
+        else if (OSPrioHighRdy == 63) {
+            if (OSPrioHighRdy == 1) {//如果下一個要執行的taskID 為1
+                if (task2_in1[2] > task1_in1[2]) {//如果task2週期大於task1,taskID要對調
+                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 1, input_t1, OSPrioHighRdy, resp_t1, ctx1);//print題目要求
+                    ctx1 = 0;
+                }
+                else {
+                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 2, input_t2, OSPrioHighRdy, resp_t2, ctx2);//print題目要求
+                    ctx2 = 0;
+                }
+
+            }
+            else {
+                if (task2_in1[2] > task1_in1[2]) {//如果task2週期大於task1,taskID要對調
+                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 2, input_t2, OSPrioHighRdy, resp_t2, ctx2);//print題目要求
+                    ctx2 = 0;
+                }
+                else {
+                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 1, input_t1, OSPrioHighRdy, resp_t1, ctx1);//print題目要求
+                    ctx1 = 0;
+                }
+            }
+
+        }
+        else if (OSPrioCur == 2 && OSPrioHighRdy == 1 && task2_in1[2] > task1_in1[2]) {//如果taskID為2-->1時，且
+            if (OSPrioHighRdy == 1) {//如果下一個要執行的taskID 為1
+                if (task2_in1[2] > task1_in1[2]) {//如果task2週期大於task1,taskID要對調
+                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 2, input_t2, 1, input_t1);//print題目要求
+                }
+                else {
+                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 1, input_t1, 2, input_t2);//print題目要求
+                }
+
+            }
+            else {
+                if (task2_in1[2] > task1_in1[2]) {//如果task2週期大於task1,taskID要對調
+                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 1, input_t1, 2, input_t2);//print題目要求
+                }
+                else {
+                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 2, input_t2, 1, input_t1);//print題目要求
+                }
+
+            }
+        }
+        else if (OSPrioCur == 1 && OSPrioHighRdy == 2 && task1_in1[2] > task2_in1[2]) {
+            if (OSPrioHighRdy == 1) {//如果下一個要執行的taskID 為1
+                if (task2_in1[2] > task1_in1[2]) {//如果task2週期大於task1,taskID要對調
+                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 2, input_t2, 1, input_t1);//print題目要求
+                }
+                else {
+                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 1, input_t1, 2, input_t2);//print題目要求
+                }
+
+            }
+            else {
+                //如果task2週期大於task1,taskID要對調
+                if (task2_in1[2] > task1_in1[2]) { printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 1, input_t1, 2, input_t2); }//print題目要求
+                else { printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 2, input_t2, 1, input_t1); }//print題目要求
+            }
+        }
+        else {
+            if (task1_in1[2] > task2_in1[2]) {//如果task2週期大於task1,taskID要對調
+                printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 2, input_t2, 1, input_t1, resp_t2, ctx2);//print題目要求
+                ctx2 = 0;
+            }
+            else {
+                printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 1, input_t1, 2, input_t2, resp_t1, ctx1);//print題目要求
+                ctx1 = 0;
+            }
+        }
+
+        //算進入次數
+        if (OSTimeGet() == task2_in1[2]) { input_t2++; }
+        if (OSTimeGet() == task1_in1[2]) { input_t1++; }
+        input_t2 = OSTimeGet() / task2_in1[2];
+        input_t1 = OSTimeGet() / task1_in1[2];
+        //算ResponseTime
+        if (task2_in1[2] > task1_in1[2]) { resp_t1 = task1_in1[1]; resp_t2 = task2_in1[2] / task1_in1[2] * task1_in1[1] + task2_in1[1]; }
+        else { resp_t1 = task1_in1[2] / task2_in1[2] * task2_in1[1] + task1_in1[1]; resp_t2 = task2_in1[1]; }
+
+    }
+
+    ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+    *                                               Project1-2
+    *********************************************************************************************************
+    */
 #else                                            /* We support up to 256 tasks                         */
     INT8U     y;
     OS_PRIO  *ptbl;

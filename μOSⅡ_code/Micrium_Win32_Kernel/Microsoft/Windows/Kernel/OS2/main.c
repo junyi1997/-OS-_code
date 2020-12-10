@@ -92,8 +92,8 @@ static  void  StartupTask (void  *p_arg);
 ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
 */
 
-int task1_in[3] = { 0, 4, 6 };//task set 1
-int task2_in[3] = { 2, 2, 10 };//task set 2
+int task1_in[3] = { 0, 2, 6 };//task set 1
+int task2_in[3] = { 0, 5, 9 };//task set 2
 int task3_in[3] = { 1, 1, 5 };//task set 3
 
 //P.S. 優先權手動設定
@@ -147,9 +147,9 @@ int  main (void)
 
     #define TASK_STACKSIZE        2048
 
-    #define TASK1_PRIORITY        2
-    #define TASK2_PRIORITY        3
-    #define TASK3_PRIORITY        1
+    #define TASK1_PRIORITY        1
+    #define TASK2_PRIORITY        2
+    #define TASK3_PRIORITY        3
     
     #define TASK1_ID              1
     #define TASK2_ID              2
@@ -183,8 +183,8 @@ int  main (void)
             TASK_STACKSIZE,
             0,
             (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
-        
-        OSTaskCreateExt(task3,                               
+        /*
+         OSTaskCreateExt(task3,                               
             0,
             &TASK3_STK[TASK_STACKSIZE - 1],
             TASK3_PRIORITY,
@@ -193,6 +193,8 @@ int  main (void)
             TASK_STACKSIZE,
             0,
             (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));        
+        */
+       
         
 
 
@@ -325,7 +327,7 @@ void  task2(void* p_arg) {
 *********************************************************************************************************
 *                                               Project1-2  3個task用--針對Task set 4 TaskID 1-->2-->3 PRIORITY 2-->3-->1
 ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-*/
+
 void  task1(void* p_arg) {
     (void)p_arg;
     while (1) {
@@ -356,14 +358,49 @@ void  task3(void* p_arg) {
     }
 }
 
-
-
-
-/*
 ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 *                                               Project1-2  3個task用--針對Task set 4 TaskID 1-->2-->3 PRIORITY 2-->3-->1
 *********************************************************************************************************
 */
 
+/*
+*********************************************************************************************************
+*                                               Project2-1-1
+▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+*/
+int t1 = 0, t2 = 0, c1 = 0, c2 = 0;
 
+void  task1(void* p_arg) {
+    (void)p_arg;
+    while (1) {
+        
+        t1 = (c1 * task1_in[2]) - OSTimeGet();
+        t2 = (c2 * task2_in[2]) - OSTimeGet();
+        printf("%d  task1  t1= %d  t2= %d c1=%d \n", OSTimeGet(), t1, t2,c1);
+        c1++;
+        OSTimeDly(task1_in[2]);
+        
+        
+    }
+}
+
+void  task2(void* p_arg) {
+    (void)p_arg;
+    while (1) {
+        
+        t1 = (c1 * task1_in[2]) - OSTimeGet();
+        t2 = (c2 * task2_in[2]) - OSTimeGet();
+        printf("%d  task2  t1= %d  t2= %d c2=%d \n", OSTimeGet(), t1, t2, c2);
+        c2++;
+        //if (t1 < t2) {}
+        OSTimeDly(task2_in[2]);
+    }
+}
+
+
+/*
+▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+*                                               Project2-1-1
+*********************************************************************************************************
+*/
 
