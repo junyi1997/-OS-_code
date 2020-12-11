@@ -30,23 +30,6 @@
 *********************************************************************************************************
 */
 
-/*
-*********************************************************************************************************
-*                                               Project1-2
-▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-*/
-int resp_t1, resp_t2, resp_t3;//ResponseTime
-int ctx1=0, ctx2 = 0, ctx3 = 0;//ContextSwitch
-int input_t1 = 0, input_t2 = 0, input_t3 = 0, input_t11 = 0, input_t21 = 0, input_t31 = 0;//進入幾次
-int task1_in1[3] = { 0, 4, 6 };//task set 1
-int task2_in1[3] = { 2, 2, 10 };//task set 2
-int task3_in1[3] = { 1, 1, 5 };//task set 3
-/*
-▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-*                                               Project1-2
-*********************************************************************************************************
-*/
-
 #define  MICRIUM_SOURCE
 
 #ifndef  OS_MASTER_FILE
@@ -504,7 +487,7 @@ INT16U  OSEventPendMulti (OS_EVENT  **pevents_pend,
     OSTCBCur->OSTCBStatPend  = OS_STAT_PEND_OK;
     OSTCBCur->OSTCBDly       = timeout;                 /* Store pend timeout in TCB                   */
     OS_EventTaskWaitMulti(pevents_pend);                /* Suspend task until events or timeout occurs */
-    
+
     OS_EXIT_CRITICAL();
     OS_Sched();                                         /* Find next highest priority task ready       */
     OS_ENTER_CRITICAL();
@@ -887,27 +870,49 @@ void  OSSchedUnlock (void)
 
 void  OSStart (void)
 {
-
-
     if (OSRunning == OS_FALSE) {
+        
+        //project 1 
         /*
-        OSTimeDly_arr(task1_in1[0], OSTCBPrioTbl[1]);//設定task1的arrival time
-        OSTimeDly_arr(task2_in1[0], OSTCBPrioTbl[2]);//設定task2的arrival time
-        OSTimeDly_arr(task3_in1[0], OSTCBPrioTbl[3]);//設定task3的arrival time
+        OS_TCB* ptcb;
+
+        ptcb = OSTCBList;
+
+        printf("===================TCB linked list====================\n");
+        printf("%-8s%-17s%-15s%-13s", "Task", "PrevTCB_addr", "TCB_addr", "Next_TCB_addr\n");
+        while (ptcb != (OS_TCB*)0) {
+            printf("%-8d%-17p%-15p%p\n", ptcb-> OSTCBPrio, ptcb->OSTCBPrev,
+                ptcb, ptcb->OSTCBNext);
+            ptcb = ptcb->OSTCBNext;
+        }        
         */
-        
 
-        
+        /*
+        **********************************************************************************************************************************
+        *                                                            project2                                                            *
+        **********************************************************************************************************************************
+        */
+
+        printf("task1 set");
+        printf("\n%-8s%-12s%-18s%-18s%-18s%-30s\n", "Tick", "Event", "CurrentTask", "NextTask ID", "ResponseTime", "# of ContextSwitch");
+
+        /*
+        **********************************************************************************************************************************
+        *                                                            project2                                                            *
+        **********************************************************************************************************************************
+        */
+
+        /*//HW1
+        printf("\n");
+        printf("%-7s%-12s%-7s", "Tick", "From Task", "To Task\n");*/
+
         OS_SchedNew();                               /* Find highest priority's task priority number   */
-
         OSPrioCur     = OSPrioHighRdy;
         OSTCBHighRdy  = OSTCBPrioTbl[OSPrioHighRdy]; /* Point to highest priority task ready to run    */
         OSTCBCur      = OSTCBHighRdy;
         OSStartHighRdy();                            /* Execute target specific code to start task     */
-        
     }
 }
-
 
 
 /*
@@ -1640,7 +1645,6 @@ static  void  OS_InitTCBList (void)
     }
     ptcb1                   = &OSTCBTbl[ix];
     ptcb1->OSTCBNext        = (OS_TCB *)0;                       /* Last OS_TCB                        */
-    //printf("ptcb1：%d\n", ptcb1->OSTCBNext);
 #if OS_TASK_NAME_EN > 0u
     ptcb1->OSTCBTaskName    = (INT8U *)(void *)"?";              /* Unknown name                       */
 #endif
@@ -1740,16 +1744,16 @@ void  OS_Sched (void)
 
 
     OS_ENTER_CRITICAL();
-    if (OSIntNesting == 0u) {                          /* Schedule only if all ISRs done and ...       */
+    if (OSIntNesting == 0u) {                          /*Schedule only if all ISRs done and ...       */
         if (OSLockNesting == 0u) {                     /* ... scheduler is not locked                  */
             OS_SchedNew();
             OSTCBHighRdy = OSTCBPrioTbl[OSPrioHighRdy];
+            
             if (OSPrioHighRdy != OSPrioCur) {          /* No Ctx Sw if current task is highest rdy     */
 #if OS_TASK_PROFILE_EN > 0u
                 OSTCBHighRdy->OSTCBCtxSwCtr++;         /* Inc. # of context switches to this task      */
 #endif
                 OSCtxSwCtr++;                          /* Increment context switch counter             */
-
 #if OS_TASK_CREATE_EXT_EN > 0u
 #if defined(OS_TLS_TBL_SIZE) && (OS_TLS_TBL_SIZE > 0u)
                 OS_TLS_TaskSw();
@@ -1781,390 +1785,204 @@ void  OS_Sched (void)
 */
 
 
-int a = 0;
+//project 1
+
 
 static  void  OS_SchedNew (void)
 {
 #if OS_LOWEST_PRIO <= 63u                        /* See if we support up to 64 tasks                   */
     INT8U   y;
 
+    y             = OSUnMapTbl[OSRdyGrp]; 
+    //OSPrioHighRdy = (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]]); //original program
 
-    y             = OSUnMapTbl[OSRdyGrp];
-    OSPrioHighRdy = (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]]);
-
-    //HW0
     /*
-    *********************************************************************************************************
-    *                                               HW00
-    ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-    
-    if (OSPrioCur == 0) {                                                       //如果OSPrioCur==0 也就是還沒有開始執行
-        printf("Tick\t Form Task\t To Task\n");                                 //print表頭
-        printf("%d\t %s\t task(%d)\n", OSTimeGet(), "********", OSPrioHighRdy); //print第一行
+    //HW1 : if no task printf ********  else print task tick and priority 
+    if (OSPrioHighRdy == 0) {
+        printf("%-7d", OSTimeGet());
+        printf("%-12s", "********");
     }
-    else if (OSPrioCur != OSPrioHighRdy) {                                      //如果OSPrioCur不等於最高優先前的
-        printf("%d\t task(%d)\t task(%d)\n", OSTimeGet(), OSPrioCur, OSPrioHighRdy);
-    }
-
-    
-    ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-    *                                               HW00
-    *********************************************************************************************************
-    */
-
-    //Project1-1
-    /*
-    *********************************************************************************************************
-    *                                               Project1-1
-    ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-    
-    if (OSPrioCur == 0) {
-
-        printf("============ TCB link list ============\n");                                                                //print表頭
-        printf("Task\tPrev_TCB_addr\tTCB_addr\tNext_TCB_addr\n");                                                           //print表頭
-        int a = 0;                                                                                                          //宣告a為儲存指標指向OSTCBPrio的暫存器
-        //OS_TCB* pointer = OSTCBList;                                                                                      測試
-        //OS_TCB* pointer = OSTCBPrioTbl[2];                                                                                測試
-        //printf("pointer 的值：%p\n", pointer);                                                                            測試
-        //printf("*pointer 的值：%d\n", pointer->OSTCBPrio);                                                                測試
-        OS_TCB* pointer = OSTCBList;                                                                                        //建立一個指標指向link list結構開始位址
-        a = pointer->OSTCBPrio;                                                                                             //將指標指向OSTCBPrio的值存放於a變數
-        printf("%d\t %p\t %p\t %p\n", a, OSTCBPrioTbl[a]->OSTCBPrev, OSTCBPrioTbl[a], OSTCBPrioTbl[a]->OSTCBNext);          //列印題目要求之格式
-        OS_TCB* pointer1 = OSTCBPrioTbl[a]->OSTCBNext;                                                                      //建立一個指標指向下一個link list結構的位址
-        a = pointer1->OSTCBPrio;                                                                                            //將指標指向OSTCBPrio的值存放於a變數
-        printf("%d\t %p\t %p\t %p\n", a, OSTCBPrioTbl[a]->OSTCBPrev, OSTCBPrioTbl[a], OSTCBPrioTbl[a]->OSTCBNext);          //列印題目要求之格式
-        OS_TCB* pointer2 = OSTCBPrioTbl[a]->OSTCBNext;                                                                      //建立一個指標指向下一個link list結構的位址
-        a = pointer2->OSTCBPrio;                                                                                            //將指標指向OSTCBPrio的值存放於a變數
-        printf("%d\t %p\t %p\t %p\n", a, OSTCBPrioTbl[a]->OSTCBPrev, OSTCBPrioTbl[a], OSTCBPrioTbl[a]->OSTCBNext);          //列印題目要求之格式
-
-    }
-
-    
-    ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-    *                                               Project1-1
-    *********************************************************************************************************
-    */
-    //Project1-2  task2個用
-    /*
-    *********************************************************************************************************
-    *                                               Project1-2  task2個用
-    ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-    
-
-    //task set 3 專用
-    if (OSTimeGet() % 6 == 0 && OSTimeGet() !=0) {//如果OSTimeGet()為6的整除 且 OSTimeGet()不為零  針對task set 3在OSTimeGet()為6的倍數時，因為沒有contextswitch，所以寫這個特例來符合題目要求
-        printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 2, input_t2, 2, input_t2 + 1, resp_t2, ctx2+1);//print題目要求
-        ctx2 = 0;//contextswitch2歸零
-    }
-    //task set 3 專用
-
-    if (OSPrioCur == 0) {                                                                            //如果OSPrioCur==0 也就是還沒有開始執行
-        printf("task1 set = (%d,%d,%d)\t task2 set = (%d,%d,%d) \n\n", task1_in1[0], task1_in1[1], task1_in1[2], task2_in1[0], task2_in1[1], task2_in1[2]);//print題目要求
-        printf("Tick\t     Event    \t CurrentTask ID\t NextTask ID\t ResponseTime\t # of ContextSwitch\n"); //print題目要求
-    }
-    else if (OSPrioCur != OSPrioHighRdy) {                                                           //如果OSPrioCur不等於最高優先前的
-        if (OSPrioCur != 63) {//如果現在正在執行的taskID 不為63時，才計數contextswitch
-            ctx1++; ctx2++;//計數contextswitch
-        }
-
-        if (OSPrioCur == 63) {//如果現在正在執行的taskID 為63
-            if (task2_in1[2] > task1_in1[2]) { ctx1 = 0; }//計數contextswitch歸零
-            else {ctx2=0;}//計數contextswitch歸零
-            
-            if (OSPrioHighRdy == 1) {//如果下一個要執行的taskID 為1
-                if (task2_in1[2] > task1_in1[2]) {//如果task2週期大於task1,taskID要對調
-                    printf("%d\t  %s\t task(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", OSPrioCur, 1, input_t1);//print題目要求
-                }
-                else {
-                    printf("%d\t  %s\t task(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", OSPrioCur, 2, input_t2);//print題目要求
-                }
-                
-            }
-            else {
-                if (task2_in1[2] > task1_in1[2]) {//如果task2週期大於task1,taskID要對調
-                    printf("%d\t  %s\t task(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", OSPrioCur, 2, input_t2);//print題目要求
-                }
-                else {
-                    printf("%d\t  %s\t task(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", OSPrioCur, 1, input_t1);//print題目要求
-                }
-                
-            }
-
-        }
-        else if (OSPrioHighRdy == 63) {
-            if (OSPrioHighRdy == 1) {//如果下一個要執行的taskID 為1
-                if (task2_in1[2] > task1_in1[2]) {//如果task2週期大於task1,taskID要對調
-                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 1, input_t1, OSPrioHighRdy, resp_t1, ctx1);//print題目要求
-                    ctx1 = 0;
-                }
-                else {
-                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 2, input_t2, OSPrioHighRdy, resp_t2, ctx2);//print題目要求
-                    ctx2 = 0;
-                }
-                
-            }
-            else {
-                if (task2_in1[2] > task1_in1[2]) {//如果task2週期大於task1,taskID要對調
-                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 2, input_t2, OSPrioHighRdy, resp_t2, ctx2);//print題目要求
-                    ctx2 = 0;
-                }
-                else {
-                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 1, input_t1, OSPrioHighRdy, resp_t1, ctx1);//print題目要求
-                    ctx1 = 0;
-                }
-            }
-
-        }
-        else if (OSPrioCur==2 && OSPrioHighRdy == 1 && task2_in1[2]> task1_in1[2]) {//如果taskID為2-->1時，且
-            if (OSPrioHighRdy == 1) {//如果下一個要執行的taskID 為1
-                if (task2_in1[2] > task1_in1[2]) {//如果task2週期大於task1,taskID要對調
-                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 2, input_t2, 1, input_t1);//print題目要求
-                }
-                else {
-                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 1, input_t1, 2, input_t2);//print題目要求
-                }
-                
-            }
-            else {
-                if (task2_in1[2] > task1_in1[2]) {//如果task2週期大於task1,taskID要對調
-                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 1, input_t1, 2, input_t2);//print題目要求
-                }
-                else {
-                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 2, input_t2, 1, input_t1);//print題目要求
-                }
-                
-            }
-        }
-        else if (OSPrioCur == 1 && OSPrioHighRdy == 2 && task1_in1[2] > task2_in1[2]) {
-            if (OSPrioHighRdy == 1) {//如果下一個要執行的taskID 為1
-                if (task2_in1[2] > task1_in1[2]) {//如果task2週期大於task1,taskID要對調
-                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 2, input_t2, 1, input_t1);//print題目要求
-                }
-                else {
-                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 1, input_t1, 2, input_t2);//print題目要求
-                }
-                
-            }
-            else {
-                //如果task2週期大於task1,taskID要對調
-                if (task2_in1[2] > task1_in1[2]) { printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 1, input_t1, 2, input_t2); }//print題目要求
-                else {printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 2, input_t2, 1, input_t1);}//print題目要求
-            }
+    else if (OSPrioHighRdy != (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]])) {
+        printf("%-7d", OSTimeGet());
+        if (OSPrioHighRdy >= 10) {
+            printf("%-5s%d%-5s", "task(", OSPrioHighRdy, ")");
         }
         else {
-            if (task1_in1[2] > task2_in1[2]) {//如果task2週期大於task1,taskID要對調
-                printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 2, input_t2, 1, input_t1, resp_t2, ctx2);//print題目要求
-                ctx2 = 0;
+            printf("%-5s%d%-6s", "task(", OSPrioHighRdy, ")");
+        }   
+    }
+
+    if (OSPrioHighRdy != (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]])) {
+        OSPrioHighRdy = (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]]); //original program
+        printf("task(%d)\n", OSPrioHighRdy);
+    }
+    */
+    
+    /*
+    **********************************************************************************************************************************
+    *                                                            project2                                                            *
+    **********************************************************************************************************************************
+    */
+    int responsetime = 0;
+    int context_switch = 0;
+
+    OS_TCB* ptcb;
+
+    if (OSPrioHighRdy != 0) {                                                   //程式開始執行
+        ptcb = OSTCBPrioTbl[OSPrioHighRdy];
+        TimeTask* point_t = ptcb->OSTCBExtPtr;                                 //指向自定義數據以進行TCB擴展的指針
+        //print current task
+        if (point_t != 0) {  //如果task
+            //the task is completion
+            if (OSTimeGet() - point_t->current_start_time == point_t->work_time + point_t->preemptive_time) {
+                printf("%-6d", OSTimeGet());
+                printf("%-14s", "Completion");
+                //calculate respond time
+                if (OSTimeGet() % point_t->period_time == 0) {
+                    responsetime = point_t->period_time;
+                }
+                else {
+                    responsetime = OSTimeGet() % point_t->period_time - point_t->start_time;
+                }
+                printf("%-5s%d%-2s%d%-9s", "task(", ptcb->OSTCBId, ")(", point_t->executive_count, ")");
+                //Delay current task
+                if (point_t->period_time * (point_t->executive_count + 1) - OSTimeGet() + point_t->start_time != 0) {
+                    OS_ENTER_CRITICAL();
+                    y = ptcb->OSTCBY;                                   //Delay current task                                 
+                    OSRdyTbl[y] &= (OS_PRIO)~ptcb->OSTCBBitX;
+                    OS_TRACE_TASK_SUSPENDED(ptcb);
+                    if (OSRdyTbl[y] == 0u) {
+                        OSRdyGrp &= (OS_PRIO)~ptcb->OSTCBBitY;
+                    }
+                    ptcb->OSTCBDly = point_t->period_time * (point_t->executive_count + 1) - OSTimeGet() + point_t->start_time;             //Load ticks in TCB                                  
+                    OS_TRACE_TASK_DLY(point_t->period_time * (point_t->executive_count + 1) - OSTimeGet() + point_t->start_time);
+                    OS_EXIT_CRITICAL();
+                    y = OSUnMapTbl[OSRdyGrp];
+                }
+                point_t->executive_count++;
+                //get conext switch value than clear
+                if (OSPrioHighRdy != (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]]))
+                    point_t->context_switch++;
+                context_switch = point_t->context_switch;
+                point_t->context_switch = 0;
+                point_t->preemptive_time = 0;       //reset preemptive time
             }
-            else {
-                printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 1, input_t1, 2, input_t2, resp_t1, ctx1);//print題目要求
-                ctx1 = 0;
+            //the task is preemption
+            if (OSTimeGet() - point_t->current_start_time < point_t->work_time + point_t->preemptive_time && 
+                OSPrioHighRdy != (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]]) ) {
+                printf("%-6d", OSTimeGet());
+                printf("%-14s", "Preemption");
+                printf("%-5s%d%-2s%d%-9s", "task(", ptcb->OSTCBId, ")(", point_t->executive_count, ")");
+                point_t->context_switch++;  //inc conext switch
+                 //record start preemptive time 
+                if (point_t->preemptive_time > 0) {
+                    point_t->preemptive_time = OSTimeGet() - point_t->preemptive_time;       //record start preemptive time 
+                }
+                else { 
+                    point_t->preemptive_time = OSTimeGet(); 
+                }
             }
         }
+        // the task is idle task
+        else if (point_t == 0) {
+            printf("%-6d", OSTimeGet());
+            printf("%-14s", "Preemption");
+            printf("%-5s%d%-11s", "task(", OSPrioHighRdy, ")");
+        }
+        //print next task
 
-        //算進入次數
-        if (OSTimeGet() == task2_in1[2]) { input_t2++; }
-        if (OSTimeGet() == task1_in1[2]) { input_t1++; }
-        input_t2 = OSTimeGet() / task2_in1[2];
-        input_t1 = OSTimeGet() / task1_in1[2];
-        //算ResponseTime
-        if (task2_in1[2] > task1_in1[2]) { resp_t1 = task1_in1[1]; resp_t2 = task2_in1[2] /task1_in1[2]* task1_in1[1]+ task2_in1[1];}
-        else { resp_t1 = task1_in1[2] / task2_in1[2] * task2_in1[1] + task1_in1[1]; resp_t2 = task2_in1[1]; }
+        if (OSPrioHighRdy != (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]]) || (point_t->context_switch == 0 && point_t->executive_count != 0)) {
+            OSPrioHighRdy = (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]]);
+            ptcb = OSTCBPrioTbl[OSPrioHighRdy];
+            point_t = ptcb->OSTCBExtPtr;
+            if (point_t != 0) {
+                printf("%-5s%d%-2s%d%-15s", "task(", ptcb->OSTCBId, ")(", point_t->executive_count, ")");
+                if (OSPrioHighRdy != OSPrioCur)
+                    point_t->context_switch++; //inc conext switch
+                //save task start time
+                if (point_t->preemptive_time == 0) {
+                    point_t->current_start_time = OSTimeGet();
+                }
+                //calculate preemptive time
+                if (point_t->preemptive_time > 0) {
+                    point_t->preemptive_time = OSTimeGet() - point_t->preemptive_time;
+                }
+            }
+            // the next task is idle task
+            else if (point_t == 0) {
+                printf("%-5s%d%-17s", "task(", OSPrioHighRdy, ")");
+            }
+            //print responsetime and context switch
+            if (responsetime > 0) {
+                printf("%-20d%d\n", responsetime, context_switch);
+                responsetime = 0;
+            }
+            else {
+                printf("\n");
+            }
+            /*
+            //the task is missing version 1 
+            if (point_t != 0 && OSTimeGet() > point_t->period_time * (point_t->executive_count + 1)) {
+                printf("%-6d", OSTimeGet());
+                printf("%-14s", "MissDeadline");
+                printf("%-5s%d%-2s%d%-9s", "task(", ptcb->OSTCBId, ")(", point_t->executive_count, ")");
+                printf("--------------------------\n");
+                system("pause");
+            }*/
+            //the task is missing version 2 
+            ptcb = OSTCBList;
 
+            while (ptcb != (OS_TCB*)0) {
+                TimeTask* point_t = ptcb->OSTCBExtPtr;
+                if (point_t != 0 && OSTimeGet() > point_t->period_time * (point_t->executive_count + 1)) {
+                    printf("%-6d", OSTimeGet());
+                    printf("%-14s", "MissDeadline");
+                    printf("%-5s%d%-2s%d%-9s", "task(", ptcb->OSTCBId, ")(", point_t->executive_count, ")");
+                    printf("--------------------------\n");
+                    system("pause");
+                }
+                ptcb = ptcb->OSTCBNext;
+            }
+
+        }     
     }
 
-    
-    ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-    *                                               Project1-2
-    *********************************************************************************************************
-    */
-    //Project1-2  3個task用--針對Task set 4 TaskID 1-->2-->3 PRIORITY 2-->3-->1
-    /*
-    *********************************************************************************************************
-    *                                               Project1-2  3個task用--針對Task set 4 TaskID 1-->2-->3 PRIORITY 2-->3-->1
-    ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-    
-
-    if(OSPrioCur == 0) {                                                                            //如果OSPrioCur==0 也就是還沒有開始執行
-        printf("task1 set = (%d,%d,%d)\t task2 set = (%d,%d,%d)\t task3 set = (%d,%d,%d) \n\n", task1_in1[0], task1_in1[1], task1_in1[2], task2_in1[0], task2_in1[1], task2_in1[2], task3_in1[0], task3_in1[1], task3_in1[2]);//print題目要求
-        printf("Tick\t     Event    \t CurrentTask ID\t NextTask ID\t ResponseTime\t # of ContextSwitch\n"); //print題目要求
-    }
-    else if (OSPrioCur != OSPrioHighRdy) {
-        //printf("%d\t %d\t %d\n", OSTimeGet(), OSPrioCur, OSPrioHighRdy);
-
+    //initizal setting
+    else if (OSPrioHighRdy == 0) {
+        OSPrioHighRdy = (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]]);
         
-        if (OSPrioCur != 63 && OSPrioHighRdy!=63) {//如果現在正在執行的taskID 不為63時，才計數contextswitch
-            ctx1++; ctx2++; ctx3++;//計數contextswitch
-        }
-        if (OSTimeGet() == task2_in1[2] && input_t3<2) {
-            printf("%d\t  %s\t task(%d)(%d)\n", OSTimeGet(), "MissDeadline", 1, input_t1);//print題目要求
-            a = 1;
-        }
-        if (a == 0) {
-            if ( OSPrioCur==1 && OSPrioHighRdy == 3) {
-                printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 1, input_t1, 3, input_t3);//print題目要求
-            }
-            if ((OSPrioCur == 3 && OSPrioHighRdy == 2) || (OSPrioCur == 2 && OSPrioHighRdy == 3)) {
-                printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 3, input_t3, 1, input_t1, resp_t3, ctx3);//print題目要求
-                ctx3 = 0;
-            }
-            if (OSPrioCur == 2 && OSPrioHighRdy == 1) {
-                printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 1, input_t1, 2, input_t2, resp_t1, ctx1);//print題目要求
-                ctx1 = 0;
-            }
-            if (OSPrioCur == 1 && OSPrioHighRdy == 2) {
-                printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 2, input_t2, 3, input_t3); ctx3--;//print題目要求
-            }
-            
-        }
-        //算進入次數
-        if (OSTimeGet() == task3_in1[2]) { input_t3++; }
-        if (OSTimeGet() == task2_in1[2]) { input_t2++; }
-        if (OSTimeGet() == task1_in1[2]) { input_t1++; }
-        input_t3 = OSTimeGet() / task3_in1[2];
-        input_t2 = OSTimeGet() / task2_in1[2];
-        input_t1 = OSTimeGet() / task1_in1[2];
-        //算ResponseTime
-        resp_t3 = task3_in1[1];
-        resp_t2 = task2_in1[2] / task3_in1[2] * task3_in1[1] + task2_in1[1]+task2_in1[1];
-        resp_t1 = task2_in1[1] + task3_in1[1];
-    }
-    
-    ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-    *                                               Project1-2  3個task用--針對Task set 4 TaskID 1-->2-->3 PRIORITY 2-->3-->1
-    *********************************************************************************************************
-    */
+        OS_TCB* ptcb;
+        ptcb = OSTCBList;
+        while (ptcb != (OS_TCB*)0) {
+            TimeTask* point_t = ptcb->OSTCBExtPtr;
 
+            if (point_t != 0 && point_t->start_time > 0u) {                            // 0 means no delay!  
+                OS_ENTER_CRITICAL();
+                y = ptcb->OSTCBY;                                   //Delay current task                                 
+                OSRdyTbl[y] &= (OS_PRIO)~ptcb->OSTCBBitX;
+                OS_TRACE_TASK_SUSPENDED(ptcb);
+                if (OSRdyTbl[y] == 0u) {
+                    OSRdyGrp &= (OS_PRIO)~ptcb->OSTCBBitY;
+                }
+                ptcb->OSTCBDly = point_t->start_time;              //Load ticks in TCB                                  
+                OS_TRACE_TASK_DLY(point_t->start_time);
+                OS_EXIT_CRITICAL();
+            }
+            ptcb = ptcb->OSTCBNext;
+        }
+        y = OSUnMapTbl[OSRdyGrp];
+        OSPrioHighRdy = (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]]);
+        
+    }
     /*
-    *********************************************************************************************************
-    *                                               Project1-2
-    ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-    
-    if (OSTimeGet() % 6 == 0 && OSTimeGet() != 0) {//如果OSTimeGet()為6的整除 且 OSTimeGet()不為零  針對task set 3在OSTimeGet()為6的倍數時，因為沒有contextswitch，所以寫這個特例來符合題目要求
-        printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 2, input_t2, 2, input_t2 + 1, resp_t2, ctx2 + 1);//print題目要求
-        ctx2 = 0;//contextswitch2歸零
-    }
-    //task set 3 專用
-
-    if (OSPrioCur == 0) {                                                                            //如果OSPrioCur==0 也就是還沒有開始執行
-        printf("task1 set = (%d,%d,%d)\t task2 set = (%d,%d,%d) \n\n", task1_in1[0], task1_in1[1], task1_in1[2], task2_in1[0], task2_in1[1], task2_in1[2]);//print題目要求
-        printf("Tick\t     Event    \t CurrentTask ID\t NextTask ID\t ResponseTime\t # of ContextSwitch\n"); //print題目要求
-    }
-    else if (OSPrioCur != OSPrioHighRdy) {                                                           //如果OSPrioCur不等於最高優先前的
-        if (OSPrioCur != 63) {//如果現在正在執行的taskID 不為63時，才計數contextswitch
-            ctx1++; ctx2++;//計數contextswitch
-        }
-
-        if (OSPrioCur == 63) {//如果現在正在執行的taskID 為63
-            if (task2_in1[2] > task1_in1[2]) { ctx1 = 0; }//計數contextswitch歸零
-            else { ctx2 = 0; }//計數contextswitch歸零
-
-            if (OSPrioHighRdy == 1) {//如果下一個要執行的taskID 為1
-                if (task2_in1[2] > task1_in1[2]) {//如果task2週期大於task1,taskID要對調
-                    printf("%d\t  %s\t task(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", OSPrioCur, 1, input_t1);//print題目要求
-                }
-                else {
-                    printf("%d\t  %s\t task(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", OSPrioCur, 2, input_t2);//print題目要求
-                }
-
-            }
-            else {
-                if (task2_in1[2] > task1_in1[2]) {//如果task2週期大於task1,taskID要對調
-                    printf("%d\t  %s\t task(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", OSPrioCur, 2, input_t2);//print題目要求
-                }
-                else {
-                    printf("%d\t  %s\t task(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", OSPrioCur, 1, input_t1);//print題目要求
-                }
-
-            }
-
-        }
-        else if (OSPrioHighRdy == 63) {
-            if (OSPrioHighRdy == 1) {//如果下一個要執行的taskID 為1
-                if (task2_in1[2] > task1_in1[2]) {//如果task2週期大於task1,taskID要對調
-                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 1, input_t1, OSPrioHighRdy, resp_t1, ctx1);//print題目要求
-                    ctx1 = 0;
-                }
-                else {
-                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 2, input_t2, OSPrioHighRdy, resp_t2, ctx2);//print題目要求
-                    ctx2 = 0;
-                }
-
-            }
-            else {
-                if (task2_in1[2] > task1_in1[2]) {//如果task2週期大於task1,taskID要對調
-                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 2, input_t2, OSPrioHighRdy, resp_t2, ctx2);//print題目要求
-                    ctx2 = 0;
-                }
-                else {
-                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 1, input_t1, OSPrioHighRdy, resp_t1, ctx1);//print題目要求
-                    ctx1 = 0;
-                }
-            }
-
-        }
-        else if (OSPrioCur == 2 && OSPrioHighRdy == 1 && task2_in1[2] > task1_in1[2]) {//如果taskID為2-->1時，且
-            if (OSPrioHighRdy == 1) {//如果下一個要執行的taskID 為1
-                if (task2_in1[2] > task1_in1[2]) {//如果task2週期大於task1,taskID要對調
-                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 2, input_t2, 1, input_t1);//print題目要求
-                }
-                else {
-                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 1, input_t1, 2, input_t2);//print題目要求
-                }
-
-            }
-            else {
-                if (task2_in1[2] > task1_in1[2]) {//如果task2週期大於task1,taskID要對調
-                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 1, input_t1, 2, input_t2);//print題目要求
-                }
-                else {
-                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 2, input_t2, 1, input_t1);//print題目要求
-                }
-
-            }
-        }
-        else if (OSPrioCur == 1 && OSPrioHighRdy == 2 && task1_in1[2] > task2_in1[2]) {
-            if (OSPrioHighRdy == 1) {//如果下一個要執行的taskID 為1
-                if (task2_in1[2] > task1_in1[2]) {//如果task2週期大於task1,taskID要對調
-                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 2, input_t2, 1, input_t1);//print題目要求
-                }
-                else {
-                    printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 1, input_t1, 2, input_t2);//print題目要求
-                }
-
-            }
-            else {
-                //如果task2週期大於task1,taskID要對調
-                if (task2_in1[2] > task1_in1[2]) { printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 1, input_t1, 2, input_t2); }//print題目要求
-                else { printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\n", OSTimeGet(), "Preemption", 2, input_t2, 1, input_t1); }//print題目要求
-            }
-        }
-        else {
-            if (task1_in1[2] > task2_in1[2]) {//如果task2週期大於task1,taskID要對調
-                printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 2, input_t2, 1, input_t1, resp_t2, ctx2);//print題目要求
-                ctx2 = 0;
-            }
-            else {
-                printf("%d\t  %s\t task(%d)(%d)\t task(%d)(%d)\t      %d                  %d\n", OSTimeGet(), "Completion", 1, input_t1, 2, input_t2, resp_t1, ctx1);//print題目要求
-                ctx1 = 0;
-            }
-        }
-
-        //算進入次數
-        if (OSTimeGet() == task2_in1[2]) { input_t2++; }
-        if (OSTimeGet() == task1_in1[2]) { input_t1++; }
-        input_t2 = OSTimeGet() / task2_in1[2];
-        input_t1 = OSTimeGet() / task1_in1[2];
-        //算ResponseTime
-        if (task2_in1[2] > task1_in1[2]) { resp_t1 = task1_in1[1]; resp_t2 = task2_in1[2] / task1_in1[2] * task1_in1[1] + task2_in1[1]; }
-        else { resp_t1 = task1_in1[2] / task2_in1[2] * task2_in1[1] + task1_in1[1]; resp_t2 = task2_in1[1]; }
-
-    }
-
-    ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-    *                                               Project1-2
-    *********************************************************************************************************
+    **********************************************************************************************************************************
+    *                                                            project2                                                            *
+    **********************************************************************************************************************************
     */
+
+    
+    
+   
 #else                                            /* We support up to 256 tasks                         */
     INT8U     y;
     OS_PRIO  *ptbl;
@@ -2511,33 +2329,12 @@ INT8U  OS_TCBInit (INT8U    prio,
 #endif
 
         OSTCBInitHook(ptcb);
-        
+
         OS_ENTER_CRITICAL();
         OSTCBPrioTbl[prio] = ptcb;
         OS_EXIT_CRITICAL();
 
         OSTaskCreateHook(ptcb);                            /* Call user defined hook                   */
-
-    /*
-    *********************************************************************************************************
-    *                                               Project1-1
-    ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-    
-
-        printf("Task[%3.1d] created, TCB Address %p\n", prio, OSTCBPrioTbl[prio]);  //print現在建立的Task編號以及位址
-        printf("-------After TCB[%d] being linked-------\n", prio);                 //print題目需要的表頭
-        
-        printf("Previous TCB point to address %p\n", OSTCBCur);                     //print上一個TCB所在的位址
-        printf("Current  TCB point to address %p\n", OSTCBPrioTbl[prio]);           //print現在TCB所在的位址
-        printf("Next     TCB point to address %p\n\n", OSTCBList);                  //print下一個TCB所在的位址
-        
-    
-    ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-    *                                               Project1-1
-    *********************************************************************************************************
-    */
-
-
 
 #if OS_TASK_CREATE_EXT_EN > 0u
 #if defined(OS_TLS_TBL_SIZE) && (OS_TLS_TBL_SIZE > 0u)
@@ -2551,6 +2348,17 @@ INT8U  OS_TCBInit (INT8U    prio,
         OS_ENTER_CRITICAL();
         ptcb->OSTCBNext = OSTCBList;                       /* Link into TCB chain                      */
         ptcb->OSTCBPrev = (OS_TCB *)0;
+
+        //Project 1 
+        /*
+        printf("-------After TCB[%d] being linked-------\n", ptcb->OSTCBPrio);
+        printf("Previous TCB point to address %p\n", ptcb->OSTCBPrev);
+        printf("Currend  TCB point to address %p\n", ptcb);
+        printf("Next     TCB point to address %p\n", ptcb->OSTCBNext);
+        */
+        
+        
+
         if (OSTCBList != (OS_TCB *)0) {
             OSTCBList->OSTCBPrev = ptcb;
         }

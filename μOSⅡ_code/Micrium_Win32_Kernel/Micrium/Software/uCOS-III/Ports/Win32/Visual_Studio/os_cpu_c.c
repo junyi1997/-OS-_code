@@ -1,55 +1,50 @@
 /*
 *********************************************************************************************************
-*                                                uC/OS-III
+*                                                uC/OS-II
 *                                          The Real-Time Kernel
+*                                     Microsoft Win32 Specific code
 *
-*
-*                           (c) Copyright 2009-2017; Micrium, Inc.; Weston, FL
-*                    All rights reserved.  Protected by international copyright laws.
-*
-*                                          Microsoft Win32 Port
+*                                 (c) Copyright 2008; Micrium; Weston, FL
+*                                           All Rights Reserved
 *
 * File    : OS_CPU_C.C
-* Version : V3.06.02
 * By      : FGK
 *
 * LICENSING TERMS:
 * ---------------
-*           uC/OS-III is provided in source form for FREE short-term evaluation, for educational use or 
-*           for peaceful research.  If you plan or intend to use uC/OS-III in a commercial application/
-*           product then, you need to contact Micrium to properly license uC/OS-III for its use in your 
-*           application/product.   We provide ALL the source code for your convenience and to help you 
-*           experience uC/OS-III.  The fact that the source is provided does NOT mean that you can use 
-*           it commercially without paying a licensing fee.
-*
-*           Knowledge of the source code may NOT be used to develop a similar product.
-*
-*           Please help us continue to provide the embedded community with the finest software available.
-*           Your honesty is greatly appreciated.
-*
-*           You can find our product's user manual, API reference, release notes and
-*           more information at doc.micrium.com.
-*           You can contact us at www.micrium.com.
-*
-* For       : Win32
-* Toolchain : Visual Studio
+*   uC/OS-II is provided in source form for FREE evaluation, for educational use or for peaceful research.
+* If you plan on using  uC/OS-II  in a commercial product you need to contact Micrium to properly  license
+* its use in your product.  We provide ALL the source code for your convenience and to help you experience
+* uC/OS-II.   The fact that the  source  is provided does  NOT  mean that you can use it without  paying a
+* licensing fee.
 *********************************************************************************************************
 */
 
 #define   OS_CPU_GLOBALS
 
-#ifdef VSC_INCLUDE_SOURCE_FILE_NAMES
-const  CPU_CHAR  *os_cpu_c__c = "$Id: $";
-#endif
 
-/*$PAGE*/
+/*
+*********************************************************************************************************
+*
+*                                            uC/OS-II Port
+*
+*                                           Microsoft Win32
+*
+* Filename      : os_cpu_c.c
+* Version       : V2.92.13
+* Programmer(s) : FGK
+*********************************************************************************************************
+*/
+
+
 /*
 *********************************************************************************************************
 *                                            INCLUDE FILES
 *********************************************************************************************************
 */
 
-#include  "../../../Source/os.h"
+#include  <lib_def.h>
+#include  <ucos_ii.h>
 
 #define  _WIN32_WINNT  0x0600
 #define   WIN32_LEAN_AND_MEAN
@@ -59,11 +54,6 @@ const  CPU_CHAR  *os_cpu_c__c = "$Id: $";
 #include  <stdio.h>
 
 
-#ifdef __cplusplus
-extern  "C" {
-#endif
-
-
 /*$PAGE*/
 /*
 *********************************************************************************************************
@@ -71,13 +61,18 @@ extern  "C" {
 *********************************************************************************************************
 */
 
-#define  THREAD_EXIT_CODE                           0u      /* Thread exit code returned on task termination.         */
+#define  WIN32_SLEEP                                        1u
+#define  WIN32_MM_TMR                                       2u          /* Use the high resolution Multimedia timer.                */
+
+#define  TIMER_METHOD                       WIN32_MM_TMR
+
+#define  WIN_MM_MIN_RES                                     1u          /* Minimum timer resolution.                                */
+
+#define  OS_MSG_TRACE                                       1u          /* Allow print trace messages.                              */
 
 #ifdef  _MSC_VER
-#define  MS_VC_EXCEPTION                   0x406D1388u      /* Visual Studio C Exception to change thread name.       */
+#define  MS_VC_EXCEPTION                           0x406D1388
 #endif
-
-#define  WIN_MM_MIN_RES                             1u      /* Minimum timer resolution.                              */
 
 
 /*
@@ -97,38 +92,33 @@ typedef  enum  os_task_state {
 } OS_TASK_STATE;
 
 
-typedef  struct  os_task {
-                                                            /* Links all created tasks.                               */
-    struct  os_task          *NextPtr;
-    struct  os_task          *PrevPtr;
-
-    OS_TCB                   *OSTCBPtr;
-    CPU_CHAR                 *OSTaskName;
-                                                            /* ---------------- INTERNAL INFORMATION ---------------- */
-    void                     *TaskArgPtr;
-    OS_OPT                    TaskOpt;
-    OS_TASK_PTR               TaskPtr;
-    volatile  OS_TASK_STATE   TaskState;
-    DWORD                     ThreadID;
-    HANDLE                    ThreadHandle;
-    HANDLE                    InitSignalPtr;                /* Task created         signal.                           */
-    HANDLE                    SignalPtr;                    /* Task synchronization signal.                           */
-} OS_TASK;
+typedef  struct  os_task_stk {
+    void                      *TaskArgPtr;
+    INT16U                     TaskOpt;
+    void                     (*Task)(void*);
+    HANDLE                     ThreadHandle;
+    DWORD                      ThreadID;
+    volatile  OS_TASK_STATE    TaskState;
+    HANDLE                     SignalPtr;                               /* Task synchronization signal.                             */
+    HANDLE                     InitSignalPtr;                           /* Task created         signal.                             */
+    CPU_BOOLEAN                Terminate;                               /* Task terminate flag.                                     */
+    OS_TCB                    *OSTCBPtr;
+} OS_TASK_STK;
 
 
 #ifdef _MSC_VER
-#pragma pack(push, 8)
+#pragma pack(push,8)
 typedef  struct  threadname_info {
-    DWORD   dwType;                                         /* Must be 0x1000.                                        */
-    LPCSTR  szName;                                         /* Pointer to name (in user addr space).                  */
-    DWORD   dwThreadID;                                     /* Thread ID (-1 = caller thread).                        */
-    DWORD   dwFlags;                                        /* Reserved for future use, must be zero.                 */
+    DWORD   dwType;                                                     /* Must be 0x1000.                                          */
+    LPCSTR  szName;                                                     /* Pointer to name (in user addr space).                    */
+    DWORD   dwThreadID;                                                 /* Thread ID (-1 = caller thread).                          */
+    DWORD   dwFlags;                                                    /* Reserved for future use, must be zero.                   */
 } THREADNAME_INFO;
 #pragma pack(pop)
 #endif
 
 
-#if (OS_CFG_TIMER_METHOD_WIN32 == WIN32_MM_TMR)
+#if (TIMER_METHOD == WIN32_MM_TMR)
 #ifdef _MSC_VER
 #pragma  comment (lib, "winmm.lib")
 #endif
@@ -142,15 +132,18 @@ typedef  struct  threadname_info {
 *********************************************************************************************************
 */
 
-static  OS_TASK   *OSTaskListPtr;
-static  HANDLE     OSTerminate_SignalPtr;
+#if (OS_VERSION >= 281u) && (OS_TMR_EN > 0u)
+static  INT16U    OSTmrCtr;
+#endif                                                                  /* #if (OS_VERSION >= 281) && (OS_TMR_EN > 0)               */
 
-static  HANDLE     OSTick_Thread;
-static  DWORD      OSTick_ThreadId;
-#if (OS_CFG_TIMER_METHOD_WIN32 == WIN32_MM_TMR)
-static  HANDLE     OSTick_SignalPtr;
-static  TIMECAPS   OSTick_TimerCap;
-static  MMRESULT   OSTick_TimerId;
+static  HANDLE    OSTerminate_SignalPtr;
+
+static  HANDLE    OSTick_Thread;
+static  DWORD     OSTick_ThreadId;
+#if (TIMER_METHOD == WIN32_MM_TMR)
+static  HANDLE    OSTick_SignalPtr;
+static  TIMECAPS  OSTick_TimerCap;
+static  MMRESULT  OSTick_TimerId;
 #endif
 
 
@@ -160,52 +153,25 @@ static  MMRESULT   OSTick_TimerId;
 *********************************************************************************************************
 */
 
-static  DWORD  WINAPI   OSTickW32         (LPVOID     p_arg);
-static  DWORD  WINAPI   OSTaskW32         (LPVOID     p_arg);
+static  DWORD  WINAPI  OSTickW32         (LPVOID        p_arg);
+static  DWORD  WINAPI  OSTaskW32         (LPVOID        p_arg);
 
-static  OS_TASK        *OSTaskGet         (OS_TCB    *p_tcb);
-static  void            OSTaskTerminate   (OS_TASK   *p_task);
+static  void           OSTaskTerminate   (OS_TASK_STK  *p_stk);
 
-static  BOOL   WINAPI   OSCtrlBreakHandler(DWORD      ctrl);
+static  BOOL   WINAPI  OSCtrlBreakHandler(DWORD         ctrl);
 
-static  void            OSSetThreadName   (DWORD      thread_id,
-                                           CPU_CHAR  *p_name);
+static  void           OSSetThreadName   (DWORD         thread_id,
+                                          INT8U        *p_name);
 
-#ifdef OS_CFG_MSG_TRACE_EN
-static  int             OS_Printf         (char      *p_str, ...);
+#if (OS_MSG_TRACE > 0u)
+static  int            OS_Printf         (char         *p_str, ...);
 #endif
-
-
-/*$PAGE*/
-/*
-*********************************************************************************************************
-*                                           IDLE TASK HOOK
-*
-* Description: This function is called by the idle task.  This hook has been added to allow you to do
-*              such things as STOP the CPU to conserve power.
-*
-* Arguments  : None.
-*
-* Note(s)    : None.
-*********************************************************************************************************
-*/
-
-void  OSIdleTaskHook (void)
-{
-#if OS_CFG_APP_HOOKS_EN > 0u
-    if (OS_AppIdleTaskHookPtr != (OS_APP_HOOK_VOID)0) {
-        (*OS_AppIdleTaskHookPtr)();
-    }
-#endif
-
-    Sleep(1u);                                              /* Reduce CPU utilization.                                */
-}
-
 
 /*$PAGE*/
 /*
 *********************************************************************************************************
 *                                       OS INITIALIZATION HOOK
+*                                            (BEGINNING)
 *
 * Description: This function is called by OSInit() at the beginning of OSInit().
 *
@@ -218,42 +184,43 @@ void  OSIdleTaskHook (void)
 *                 this case happens.
 *********************************************************************************************************
 */
-
-void  OSInitHook (void)
+#if (OS_CPU_HOOKS_EN > 0u) && (OS_VERSION > 203u)
+void  OSInitHookBegin (void)
 {
     HANDLE  hProc;
 
 
-#ifdef OS_CFG_MSG_TRACE_EN
-#if (OS_CFG_TIMER_METHOD_WIN32 == WIN32_SLEEP)
-    if (OSCfg_TickRate_Hz > 100u) {
-        OS_Printf("OS_CFG_TIMER_METHOD_WIN32 Warning: Sleep timer method cannot maintain time accuracy with the current setting of OSCfg_TickRate_Hz (%du). Consider using Multimedia timer method.\n\n",
-                  OSCfg_TickRate_Hz);
-    }
-#endif
+#if (OS_VERSION >= 281u) && (OS_TMR_EN > 0u)
+    OSTmrCtr = 0u;
 #endif
 
-    OSTaskListPtr         = NULL;
+#if (TIMER_METHOD     == WIN32_SLEEP) && \
+    (OS_TICKS_PER_SEC >  100u) && \
+    (OS_MSG_TRACE     >    0u)
+    OS_Printf("Warning: Sleep TIMER_METHOD cannot maintain time accuracy with the current setting of OS_TICKS_PER_SEC. Consider using Multimedia TIMER_METHOD.\n\n");
+#endif
+
+
     OSTerminate_SignalPtr = NULL;
     OSTick_Thread         = NULL;
-#if (OS_CFG_TIMER_METHOD_WIN32 == WIN32_MM_TMR)
+#if (TIMER_METHOD == WIN32_MM_TMR)
     OSTick_SignalPtr      = NULL;
 #endif
 
 
-    CPU_IntInit();                                          /* Initialize Critical Section objects.                   */
+    CPU_IntInit();                                                      /* Initialize Critical Section objects.                     */
 
 
     hProc = GetCurrentProcess();
     SetPriorityClass(hProc, HIGH_PRIORITY_CLASS);
     SetProcessAffinityMask(hProc, 1);
 
-    OSSetThreadName(GetCurrentThreadId(), "main()");
+    OSSetThreadName(GetCurrentThreadId(), (INT8U *)"main()");
 
-                                                            /* Manual reset enabled to broadcast terminate signal.    */
-    OSTerminate_SignalPtr = CreateEvent(NULL, TRUE, FALSE, NULL);
+
+    OSTerminate_SignalPtr = CreateEvent(NULL, TRUE, FALSE, NULL);       /* Manual reset enabled to broadcast terminate signal.      */
     if (OSTerminate_SignalPtr == NULL) {
-#ifdef OS_CFG_MSG_TRACE_EN
+#if (OS_MSG_TRACE > 0u)
         OS_Printf("Error: CreateEvent [OSTerminate] failed.\n");
 #endif
         return;
@@ -262,7 +229,7 @@ void  OSInitHook (void)
 
     OSTick_Thread = CreateThread(NULL, 0, OSTickW32, 0, CREATE_SUSPENDED, &OSTick_ThreadId);
     if (OSTick_Thread == NULL) {
-#ifdef OS_CFG_MSG_TRACE_EN
+#if (OS_MSG_TRACE > 0u)
         OS_Printf("Error: CreateThread [OSTickW32] failed.\n");
 #endif
         CloseHandle(OSTerminate_SignalPtr);
@@ -270,17 +237,15 @@ void  OSInitHook (void)
         return;
     }
 
-#ifdef OS_CFG_MSG_TRACE_EN
-    OS_Printf("Thread    '%-32s' Created, Thread ID %5.0d\n",
-              "OSTickW32",
-              OSTick_ThreadId);
+#if (OS_MSG_TRACE > 0u)
+    OS_Printf("OSTick    created, Thread ID %5.0d\n", OSTick_ThreadId);
 #endif
 
     SetThreadPriority(OSTick_Thread, THREAD_PRIORITY_HIGHEST);
 
-#if (OS_CFG_TIMER_METHOD_WIN32 == WIN32_MM_TMR)
+#if (TIMER_METHOD == WIN32_MM_TMR)
     if (timeGetDevCaps(&OSTick_TimerCap, sizeof(OSTick_TimerCap)) != TIMERR_NOERROR) {
-#ifdef OS_CFG_MSG_TRACE_EN
+#if (OS_MSG_TRACE > 0u)
         OS_Printf("Error: Cannot retrieve Timer capabilities.\n");
 #endif
         CloseHandle(OSTick_Thread);
@@ -296,7 +261,7 @@ void  OSInitHook (void)
     }
 
     if (timeBeginPeriod(OSTick_TimerCap.wPeriodMin) != TIMERR_NOERROR) {
-#ifdef OS_CFG_MSG_TRACE_EN
+#if (OS_MSG_TRACE > 0u)
         OS_Printf("Error: Cannot set Timer minimum resolution.\n");
 #endif
         CloseHandle(OSTick_Thread);
@@ -309,7 +274,7 @@ void  OSInitHook (void)
 
     OSTick_SignalPtr = CreateEvent(NULL, TRUE, FALSE, NULL);
     if (OSTick_SignalPtr == NULL) {
-#ifdef OS_CFG_MSG_TRACE_EN
+#if (OS_MSG_TRACE > 0u)
         OS_Printf("Error: CreateEvent [OSTick] failed.\n");
 #endif
         timeEndPeriod(OSTick_TimerCap.wPeriodMin);
@@ -324,7 +289,7 @@ void  OSInitHook (void)
 #ifdef _MSC_VER
 #pragma warning (disable : 4055)
 #endif
-    OSTick_TimerId = timeSetEvent((UINT          )(1000u / OSCfg_TickRate_Hz),
+    OSTick_TimerId = timeSetEvent((UINT          )(1000u / OS_TICKS_PER_SEC),
                                   (UINT          ) OSTick_TimerCap.wPeriodMin,
                                   (LPTIMECALLBACK) OSTick_SignalPtr,
                                   (DWORD_PTR     ) NULL,
@@ -334,7 +299,7 @@ void  OSInitHook (void)
 #endif
 
     if (OSTick_TimerId == 0u) {
-#ifdef OS_CFG_MSG_TRACE_EN
+#if (OS_MSG_TRACE > 0u)
         OS_Printf("Error: Cannot start Timer.\n");
 #endif
         CloseHandle(OSTick_SignalPtr);
@@ -349,30 +314,27 @@ void  OSInitHook (void)
     }
 #endif
 }
+#endif
 
 
 /*$PAGE*/
 /*
 *********************************************************************************************************
-*                                         STATISTIC TASK HOOK
+*                                       OS INITIALIZATION HOOK
+*                                               (END)
 *
-* Description: This function is called every second by uC/OS-III's statistics task.  This allows your
-*              application to add functionality to the statistics task.
+* Description: This function is called by OSInit() at the end of OSInit().
 *
 * Arguments  : None.
 *
-* Note(s)    : None.
+* Note(s)    : 1) Interrupts should be disabled during this call.
 *********************************************************************************************************
 */
-
-void  OSStatTaskHook (void)
+#if (OS_CPU_HOOKS_EN > 0u) && (OS_VERSION > 203u)
+void  OSInitHookEnd (void)
 {
-#if OS_CFG_APP_HOOKS_EN > 0u
-    if (OS_AppStatTaskHookPtr != (OS_APP_HOOK_VOID)0) {
-        (*OS_AppStatTaskHookPtr)();
-    }
-#endif
 }
+#endif
 
 
 /*$PAGE*/
@@ -385,91 +347,18 @@ void  OSStatTaskHook (void)
 * Arguments  : p_tcb        Pointer to the task control block of the task being created.
 *
 * Note(s)    : 1) Interrupts are disabled during this call.
-*
-*              2) Kernel objects must have unique names. Otherwise, a duplicate handle will be given for
-*                 consecutive created objects. A GetLastError() ERROR_ALREADY_EXISTS can be checked when
-*                 this case happens.
 *********************************************************************************************************
 */
-
+#if (OS_CPU_HOOKS_EN > 0u)
 void  OSTaskCreateHook (OS_TCB  *p_tcb)
 {
-    OS_TASK  *p_task;
-    CPU_SR_ALLOC();
-
-
-#if OS_CFG_APP_HOOKS_EN > 0u
-    if (OS_AppTaskCreateHookPtr != (OS_APP_HOOK_TCB)0) {
-        (*OS_AppTaskCreateHookPtr)(p_tcb);
-    }
-#endif
-
-    p_task             = OSTaskGet(p_tcb);
-#if OS_CFG_DBG_EN > 0u
-    p_task->OSTaskName = p_tcb->NamePtr;
+#if (OS_APP_HOOKS_EN > 0u)
+    App_TaskCreateHook(p_tcb);
 #else
-	p_task->OSTaskName = "";
+    (void)p_tcb;                                                        /* Prevent compiler warning                                 */
 #endif
-                                                            /* See Note #2.                                           */
-    p_task->SignalPtr = CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (p_task->SignalPtr == NULL) {
-#ifdef OS_CFG_MSG_TRACE_EN
-        OS_Printf("Task[%3.1d] '%s' cannot allocate signal event.\n",
-                  p_tcb->Prio,
-                  p_task->OSTaskName);
-#endif
-        return;
-    }
-                                                            /* See Note #2.                                           */
-    p_task->InitSignalPtr = CreateEvent(NULL, TRUE, FALSE, NULL);
-    if (p_task->InitSignalPtr == NULL) {
-        CloseHandle(p_task->SignalPtr);
-        p_task->SignalPtr = NULL;
-
-#ifdef OS_CFG_MSG_TRACE_EN
-        OS_Printf("Task[%3.1d] '%s' cannot allocate initialization complete signal event.\n",
-                  p_tcb->Prio,
-                  p_task->OSTaskName);
-#endif
-        return;
-    }
-
-    p_task->ThreadHandle = CreateThread(NULL, 0, OSTaskW32, p_tcb, CREATE_SUSPENDED, &p_task->ThreadID);
-    if (p_task->ThreadHandle == NULL) {
-        CloseHandle(p_task->InitSignalPtr);
-        CloseHandle(p_task->SignalPtr);
-
-        p_task->InitSignalPtr = NULL;
-        p_task->SignalPtr     = NULL;
-#ifdef OS_CFG_MSG_TRACE_EN
-        OS_Printf("Task[%3.1d] '%s' failed to be created.\n",
-                  p_tcb->Prio,
-                  p_task->OSTaskName);
-#endif
-        return;
-    }
-
-#ifdef OS_CFG_MSG_TRACE_EN
-    OS_Printf("Task[%3.1d] '%-32s' Created, Thread ID %5.0d\n",
-              p_tcb->Prio,
-              p_task->OSTaskName,
-              p_task->ThreadID);
-#endif
-
-    p_task->TaskState = STATE_CREATED;
-    p_task->OSTCBPtr  = p_tcb;
-
-    CPU_CRITICAL_ENTER();
-    p_task->PrevPtr     = (OS_TASK *)0;
-    if (OSTaskListPtr  == (OS_TASK *)0) {
-        p_task->NextPtr = (OS_TASK *)0;
-    } else {
-        p_task->NextPtr        = OSTaskListPtr;
-        OSTaskListPtr->PrevPtr = p_task;
-    }
-    OSTaskListPtr = p_task;
-    CPU_CRITICAL_EXIT();
 }
+#endif
 
 
 /*$PAGE*/
@@ -484,35 +373,30 @@ void  OSTaskCreateHook (OS_TCB  *p_tcb)
 * Note(s)    : 1) Interrupts are disabled during this call.
 *********************************************************************************************************
 */
-
+#if (OS_CPU_HOOKS_EN > 0u)
 void  OSTaskDelHook (OS_TCB  *p_tcb)
 {
-    OS_TASK  *p_task;
+    OS_TASK_STK  *p_stk;
 
 
-#if OS_CFG_APP_HOOKS_EN > 0u
-    if (OS_AppTaskDelHookPtr != (OS_APP_HOOK_TCB)0) {
-        (*OS_AppTaskDelHookPtr)(p_tcb);
-    }
+#if (OS_APP_HOOKS_EN > 0u)
+    App_TaskDelHook(p_tcb);
 #endif
 
-    p_task = OSTaskGet(p_tcb);
+    p_stk = (OS_TASK_STK *)p_tcb->OSTCBStkPtr;
 
-    if (p_task == (OS_TASK *)0) {
-        return;
-    }
-
-    switch (p_task->TaskState) {
+    switch (p_stk->TaskState) {
         case STATE_RUNNING:
-             if (GetCurrentThreadId() == p_task->ThreadID) {
-                p_task->TaskState = STATE_TERMINATING;
+             if (GetCurrentThreadId() == p_stk->ThreadID) {
+                p_stk->Terminate = DEF_TRUE;
+                p_stk->TaskState = STATE_TERMINATING;
 
              } else {
 
-                 TerminateThread(p_task->ThreadHandle, THREAD_EXIT_CODE);
-                 CloseHandle(p_task->ThreadHandle);
+                 TerminateThread(p_stk->ThreadHandle, 0xFFFFFFFF);
+                 CloseHandle(p_stk->ThreadHandle);
 
-                 OSTaskTerminate(p_task);
+                 OSTaskTerminate(p_stk);
              }
              break;
 
@@ -520,10 +404,10 @@ void  OSTaskDelHook (OS_TCB  *p_tcb)
         case STATE_CREATED:
         case STATE_SUSPENDED:
         case STATE_INTERRUPTED:
-             TerminateThread(p_task->ThreadHandle, THREAD_EXIT_CODE);
-             CloseHandle(p_task->ThreadHandle);
+             TerminateThread(p_stk->ThreadHandle, 0xFFFFFFFF);
+             CloseHandle(p_stk->ThreadHandle);
 
-             OSTaskTerminate(p_task);
+             OSTaskTerminate(p_stk);
              break;
 
 
@@ -531,9 +415,34 @@ void  OSTaskDelHook (OS_TCB  *p_tcb)
              break;
     }
 }
+#endif
 
 
 /*$PAGE*/
+/*
+*********************************************************************************************************
+*                                           IDLE TASK HOOK
+*
+* Description: This function is called by the idle task.  This hook has been added to allow you to do
+*              such things as STOP the CPU to conserve power.
+*
+* Arguments  : None.
+*
+* Note(s)    : 1) Interrupts are enabled during this call.
+*********************************************************************************************************
+*/
+#if (OS_CPU_HOOKS_EN > 0u) && (OS_VERSION >= 251u)
+void  OSTaskIdleHook (void)
+{
+#if (OS_APP_HOOKS_EN > 0u)
+    App_TaskIdleHook();
+#endif
+
+    Sleep(1u);                                                          /* Reduce CPU utilization.                                  */
+}
+#endif
+
+
 /*
 *********************************************************************************************************
 *                                          TASK RETURN HOOK
@@ -547,16 +456,37 @@ void  OSTaskDelHook (OS_TCB  *p_tcb)
 *********************************************************************************************************
 */
 
+#if (OS_CPU_HOOKS_EN > 0u)
 void  OSTaskReturnHook (OS_TCB  *p_tcb)
 {
-#if OS_CFG_APP_HOOKS_EN > 0u
-    if (OS_AppTaskReturnHookPtr != (OS_APP_HOOK_TCB)0) {
-        (*OS_AppTaskReturnHookPtr)(p_tcb);
-    }
+#if (OS_APP_HOOKS_EN > 0u)
+    App_TaskReturnHook(p_tcb);
 #else
-    (void)p_tcb;                                            /* Prevent compiler warning                               */
+    (void)p_tcb;                                                        /* Prevent compiler warning                                 */
 #endif
 }
+#endif
+
+
+/*$PAGE*/
+/*
+*********************************************************************************************************
+*                                         STATISTIC TASK HOOK
+*
+* Description: This function is called every second by uC/OS-II's statistics task.  This allows your
+*              application to add functionality to the statistics task.
+*
+* Arguments  : None.
+*********************************************************************************************************
+*/
+#if (OS_CPU_HOOKS_EN > 0u)
+void  OSTaskStatHook (void)
+{
+#if (OS_APP_HOOKS_EN > 0u)
+    App_TaskStatHook();
+#endif
+}
+#endif
 
 
 /*$PAGE*/
@@ -564,58 +494,43 @@ void  OSTaskReturnHook (OS_TCB  *p_tcb)
 *********************************************************************************************************
 *                                      INITIALIZE A TASK'S STACK
 *
-* Description: This function is called by OS_Task_Create() or OSTaskCreateExt() to initialize the stack
-*              frame of the task being created. This function is highly processor specific.
+* Description: This function is called by either OSTaskCreate() or OSTaskCreateExt() to initialize the
+*              stack frame of the task being created. This function is highly processor specific.
 *
-* Arguments  : p_task       Pointer to the task entry point address.
+* Arguments  : task         Pointer to the task code.
 *
 *              p_arg        Pointer to a user supplied data area that will be passed to the task
 *                               when the task first executes.
 *
-*              p_stk_base   Pointer to the base address of the stack.
+*              ptos         Pointer to the top of stack. It is assumed that 'ptos' points to the
+*                               highest valid address on the stack.
 *
-*              stk_size     Size of the stack, in number of CPU_STK elements.
-*
-*              opt          Options used to alter the behavior of OS_Task_StkInit().
-*                            (see OS.H for OS_TASK_OPT_xxx).
+*              opt          Options used to alter the behavior of OSTaskStkInit().
+*                               (see uCOS_II.H for OS_TASK_OPT_???).
 *
 * Returns    : Always returns the location of the new top-of-stack' once the processor registers have
 *              been placed on the stack in the proper order.
 *********************************************************************************************************
 */
 
-CPU_STK  *OSTaskStkInit (OS_TASK_PTR    p_task,
-                         void          *p_arg,
-                         CPU_STK       *p_stk_base,
-                         CPU_STK       *p_stk_limit,
-                         CPU_STK_SIZE   stk_size,
-                         OS_OPT         opt)
+OS_STK  *OSTaskStkInit (void  (*task)(void  *pd), void  *p_arg, OS_STK  *ptos, INT16U  opt)
 {
-    OS_TASK  *p_task_info;
+    OS_TASK_STK  *p_stk;
 
+                                                                        /* Load stack pointer                                       */
+    p_stk                = (OS_TASK_STK *)((char *)ptos - sizeof(OS_TASK_STK));
+    p_stk->TaskArgPtr    =  p_arg;
+    p_stk->TaskOpt       =  opt;
+    p_stk->Task          =  task;
+    p_stk->ThreadHandle  =  NULL;
+    p_stk->ThreadID      =  0u;
+    p_stk->TaskState     =  STATE_NONE;
+    p_stk->SignalPtr     =  NULL;
+    p_stk->InitSignalPtr =  NULL;
+    p_stk->Terminate     =  DEF_FALSE;
+    p_stk->OSTCBPtr      =  NULL;
 
-    (void)p_stk_limit;                                      /* Prevent compiler warning                               */
-    (void)stk_size;
-
-                                                            /* Create task info struct into task's stack.             */
-	p_task_info                = (OS_TASK *)(&p_stk_base[stk_size] - sizeof(OS_TASK));
-
-    p_task_info->NextPtr       =  NULL;
-    p_task_info->PrevPtr       =  NULL;
-    p_task_info->OSTCBPtr      =  NULL;
-    p_task_info->OSTaskName    =  NULL;
-
-    p_task_info->TaskArgPtr    =  p_arg;
-    p_task_info->TaskOpt       =  opt;
-    p_task_info->TaskPtr       =  p_task;
-    p_task_info->TaskState     =  STATE_NONE;
-
-    p_task_info->ThreadID      =  0u;
-    p_task_info->ThreadHandle  =  NULL;
-    p_task_info->InitSignalPtr =  NULL;
-    p_task_info->SignalPtr     =  NULL;
-
-	return ((CPU_STK*)p_task_info);
+    return ((OS_STK *)p_stk);
 }
 
 
@@ -630,54 +545,95 @@ CPU_STK  *OSTaskStkInit (OS_TASK_PTR    p_task,
 * Arguments  : None.
 *
 * Note(s)    : 1) Interrupts are disabled during this call.
-*              2) It is assumed that the global pointer 'OSTCBHighRdyPtr' points to the TCB of the task
-*                 that will be 'switched in' (i.e. the highest priority task) and, 'OSTCBCurPtr' points
-*                 to the task being switched out (i.e. the preempted task).
+*              2) It is assumed that the global pointer 'OSTCBHighRdy' points to the TCB of the task that
+*                 will be 'switched in' (i.e. the highest priority task) and, 'OSTCBCur' points to the
+*                 task being switched out (i.e. the preempted task).
 *********************************************************************************************************
 */
-
+#if (OS_CPU_HOOKS_EN > 0u) && (OS_TASK_SW_HOOK_EN > 0u)
 void  OSTaskSwHook (void)
 {
-#if OS_CFG_TASK_PROFILE_EN > 0u
-    CPU_TS  ts;
-#endif
-#ifdef  CPU_CFG_INT_DIS_MEAS_EN
-    CPU_TS  int_dis_time;
-#endif
-
-
-
-#if OS_CFG_APP_HOOKS_EN > 0u
-    if (OS_AppTaskSwHookPtr != (OS_APP_HOOK_VOID)0) {
-        (*OS_AppTaskSwHookPtr)();
-    }
-#endif
-
-#if OS_CFG_TASK_PROFILE_EN > 0u
-    ts = OS_TS_GET();
-    if (OSTCBCurPtr != OSTCBHighRdyPtr) {
-        OSTCBCurPtr->CyclesDelta  = ts - OSTCBCurPtr->CyclesStart;
-        OSTCBCurPtr->CyclesTotal += (OS_CYCLES)OSTCBCurPtr->CyclesDelta;
-    }
-
-    OSTCBHighRdyPtr->CyclesStart = ts;
-#endif
-
-#ifdef  CPU_CFG_INT_DIS_MEAS_EN
-    int_dis_time = CPU_IntDisMeasMaxCurReset();             /* Keep track of per-task interrupt disable time          */
-    if (OSTCBCurPtr->IntDisTimeMax < int_dis_time) {
-        OSTCBCurPtr->IntDisTimeMax = int_dis_time;
-    }
-#endif
-
-#if OS_CFG_SCHED_LOCK_TIME_MEAS_EN > 0u
-                                                            /* Keep track of per-task scheduler lock time             */
-    if (OSTCBCurPtr->SchedLockTimeMax < (CPU_TS)OSSchedLockTimeMaxCur) {
-        OSTCBCurPtr->SchedLockTimeMax = (CPU_TS)OSSchedLockTimeMaxCur;
-    }
-    OSSchedLockTimeMaxCur = (CPU_TS)0;                      /* Reset the per-task value                               */
+#if (OS_APP_HOOKS_EN > 0u)
+    App_TaskSwHook();
 #endif
 }
+#endif
+
+
+/*$PAGE*/
+/*
+*********************************************************************************************************
+*                                          OS_TCBInit() HOOK
+*
+* Description: This function is called by OS_TCBInit() after setting up most of the task control block.
+*
+* Arguments  : p_tcb        Pointer to the task control block of the task being created.
+*
+* Note(s)    : 1) Interrupts may or may not be ENABLED during this call.
+*
+*              2) Kernel objects must have unique names. Otherwise, a duplicate handle will be given for
+*                 consecutive created objects. A GetLastError() ERROR_ALREADY_EXISTS can be checked when
+*                 this case happens.
+*********************************************************************************************************
+*/
+#if (OS_CPU_HOOKS_EN > 0u) && (OS_VERSION > 203u)
+void  OSTCBInitHook (OS_TCB  *p_tcb)
+{
+    OS_TASK_STK  *p_stk;
+
+
+#if (OS_APP_HOOKS_EN > 0u)
+    App_TCBInitHook(p_tcb);
+#else
+    (void)p_tcb;                                                        /* Prevent compiler warning                                 */
+#endif
+
+    p_stk = (OS_TASK_STK *)p_tcb->OSTCBStkPtr;
+
+    p_stk->SignalPtr = CreateEvent(NULL, FALSE, FALSE, NULL);           /* See Note #2.                                             */
+    if (p_stk->SignalPtr == NULL) {
+#if (OS_MSG_TRACE > 0u)
+        OS_Printf("Task[%3.1d] cannot allocate signal event.\n", p_tcb->OSTCBPrio);
+#endif
+        return;
+    }
+
+    p_stk->InitSignalPtr = CreateEvent(NULL, TRUE, FALSE, NULL);        /* See Note #2.                                             */
+    if (p_stk->InitSignalPtr == NULL) {
+        CloseHandle(p_stk->SignalPtr);
+        p_stk->SignalPtr = NULL;
+
+#if (OS_MSG_TRACE > 0u)
+        OS_Printf("Task[%3.1d] cannot allocate initialization complete signal event.\n", p_tcb->OSTCBPrio);
+#endif
+        return;
+    }
+
+    p_stk->ThreadHandle = CreateThread(NULL, 0, OSTaskW32, p_tcb, CREATE_SUSPENDED, &p_stk->ThreadID);
+    if (p_stk->ThreadHandle == NULL) {
+        CloseHandle(p_stk->InitSignalPtr);
+        CloseHandle(p_stk->SignalPtr);
+
+        p_stk->InitSignalPtr = NULL;
+        p_stk->SignalPtr     = NULL;
+#if (OS_MSG_TRACE > 0u)
+        OS_Printf("Task[%3.1d] failed to be created.\n", p_tcb->OSTCBPrio);
+#endif
+        return;
+    }
+
+#if (OS_MSG_TRACE > 0u)
+    //OS_Printf("Task[%3.1d] created, Thread ID %5.0d\n", p_tcb->OSTCBPrio, p_stk->ThreadID); // original program
+    
+    //project 1 
+    OS_Printf("Task[%3.1d] created, TCB Address %p\n", p_tcb->OSTCBPrio, p_tcb);
+
+#endif
+
+    p_stk->TaskState = STATE_CREATED;
+    p_stk->OSTCBPtr  = p_tcb;
+}
+#endif
 
 
 /*$PAGE*/
@@ -689,18 +645,25 @@ void  OSTaskSwHook (void)
 *
 * Arguments  : None.
 *
-* Note(s)    : 1) This function is assumed to be called from the Tick ISR.
+* Note(s)    : 1) Interrupts may or may not be ENABLED during this call.
 *********************************************************************************************************
 */
-
+#if (OS_CPU_HOOKS_EN > 0u) && (OS_TIME_TICK_HOOK_EN > 0u)
 void  OSTimeTickHook (void)
 {
-#if OS_CFG_APP_HOOKS_EN > 0u
-    if (OS_AppTimeTickHookPtr != (OS_APP_HOOK_VOID)0) {
-        (*OS_AppTimeTickHookPtr)();
+#if (OS_APP_HOOKS_EN > 0u)
+    App_TimeTickHook();
+#endif
+
+#if (OS_VERSION >= 281u) && (OS_TMR_EN > 0u)
+    OSTmrCtr++;
+    if (OSTmrCtr >= (OS_TICKS_PER_SEC / OS_TMR_CFG_TICKS_PER_SEC)) {
+        OSTmrCtr = 0u;
+        OSTmrSignal();
     }
 #endif
 }
+#endif
 
 
 /*$PAGE*/
@@ -715,29 +678,32 @@ void  OSTimeTickHook (void)
 *
 * Note(s)    : 1) OSStartHighRdy() MUST:
 *                      a) Call OSTaskSwHook() then,
-*                      b) Switch to the highest priority task.
+*                      b) Set OSRunning to TRUE,
+*                      c) Switch to the highest priority task.
 *********************************************************************************************************
 */
 
 void  OSStartHighRdy (void)
 {
-    OS_TASK  *p_task;
-    OS_TCB   *p_tcb;
-    OS_ERR    err;
+    OS_TASK_STK  *p_stk;
+    OS_TCB       *p_tcb;
+    INT8U         prio;
     CPU_SR_ALLOC();
 
 
     OSTaskSwHook();
+    OSRunning = 1;
 
-    p_task = OSTaskGet(OSTCBHighRdyPtr);
-    ResumeThread(p_task->ThreadHandle);
-                                                            /* Wait while task is created and ready to run.           */
-    SignalObjectAndWait(p_task->SignalPtr, p_task->InitSignalPtr, INFINITE, FALSE);
-    ResumeThread(OSTick_Thread);                            /* Start OSTick Thread.                                   */
-    WaitForSingleObject(OSTick_Thread, INFINITE);           /* Wait until OSTick Thread has terminated.               */
+    p_stk = (OS_TASK_STK *)OSTCBHighRdy->OSTCBStkPtr;                   /* OSTCBCur  = OSTCBHighRdy;                                */
+                                                                        /* OSPrioCur = OSPrioHighRdy;                               */
+    ResumeThread(p_stk->ThreadHandle);
+                                                                        /* Wait while task is created and until it is ready to run. */
+    SignalObjectAndWait(p_stk->SignalPtr, p_stk->InitSignalPtr, INFINITE, FALSE);
+    ResumeThread(OSTick_Thread);                                        /* Start OSTick Thread.                                     */
+    WaitForSingleObject(OSTick_Thread, INFINITE);                       /* Wait until OSTick Thread has terminated.                 */
 
 
-#if (OS_CFG_TIMER_METHOD_WIN32 == WIN32_MM_TMR)
+#if (TIMER_METHOD == WIN32_MM_TMR)
     timeKillEvent(OSTick_TimerId);
     timeEndPeriod(OSTick_TimerCap.wPeriodMin);
     CloseHandle(OSTick_SignalPtr);
@@ -747,33 +713,29 @@ void  OSStartHighRdy (void)
     CloseHandle(OSTerminate_SignalPtr);
 
 
-#ifdef OS_CFG_MSG_TRACE_EN
-    OS_Printf("\nDeleting uC/OS-III tasks...\n");
+#if (OS_MSG_TRACE > 0u)
+    OS_Printf("\nDeleting uC/OS-II tasks...\n");
 #endif
-                                                            /* Delete all created tasks/threads.                      */
-    OSSchedLock(&err);
-
+                                                                        /* Delete all created tasks/threads.                        */
     CPU_CRITICAL_ENTER();
-    p_task = OSTaskListPtr;
-    while (p_task != NULL) {
-        p_tcb = p_task->OSTCBPtr;
-        p_task = p_task->NextPtr;
-
-        if (p_tcb == &OSIdleTaskTCB) {
-            OSTaskDelHook(p_tcb);
+    p_tcb = OSTCBList;
+    while (p_tcb != (OS_TCB *)0) {
+        if (p_tcb != OS_TCB_RESERVED) {
+            prio = p_tcb->OSTCBPrio;
+            if (prio == OS_TASK_IDLE_PRIO) {
+                OSTaskDelHook(p_tcb);
+                p_tcb = p_tcb->OSTCBNext;
+            } else {
+                p_tcb = p_tcb->OSTCBNext;
+               (void)OSTaskDel(prio);
+            }
         } else {
-            OSTaskDel(p_tcb, &err);
+            p_tcb = p_tcb->OSTCBNext;
         }
-
-        Sleep(1);                                           /* Allow thread to be deleted.                            */
     }
     CPU_CRITICAL_EXIT();
 
-#if 0                                                       /* Prevent scheduler from running when exiting app.       */
-    OSSchedUnlock(&err);
-#endif
-
-    CPU_IntEnd();                                           /* Delete Critical Section objects.                       */
+    CPU_IntEnd();                                                       /* Delete Critical Section objects.                         */
 }
 
 
@@ -817,99 +779,98 @@ void  OSStartHighRdy (void)
 
 void  OSCtxSw (void)
 {
-    OS_TASK  *p_task_cur;
-    OS_TASK  *p_task_new;
-#ifdef OS_CFG_MSG_TRACE_EN
-    OS_TCB   *p_tcb_cur;
-    OS_TCB   *p_tcb_new;
+    OS_TASK_STK  *p_stk;
+    OS_TASK_STK  *p_stk_new;
+#if (OS_MSG_TRACE > 0u)
+    OS_TCB       *p_tcb_cur;
+    OS_TCB       *p_tcb_new;
 #endif
     CPU_SR_ALLOC();
 
 
 #if (CPU_CFG_CRITICAL_METHOD == CPU_CRITICAL_METHOD_STATUS_LOCAL)
-    cpu_sr = 0;
+    cpu_sr = 0u;
+#endif
+
+#if (OS_MSG_TRACE > 0u)
+    p_tcb_cur = OSTCBCur;
+    p_tcb_new = OSTCBHighRdy;
 #endif
 
 
-#ifdef OS_CFG_MSG_TRACE_EN
-    p_tcb_cur = OSTCBCurPtr;
-    p_tcb_new = OSTCBHighRdyPtr;
-#endif
-
-
-    p_task_cur = OSTaskGet(OSTCBCurPtr);
+    p_stk = (OS_TASK_STK *)OSTCBCur->OSTCBStkPtr;
 
     OSTaskSwHook();
 
-    OSTCBCurPtr = OSTCBHighRdyPtr;
-    OSPrioCur   = OSPrioHighRdy;
+    OSTCBCur  = OSTCBHighRdy;
+    OSPrioCur = OSPrioHighRdy;
 
-    if (p_task_cur->TaskState == STATE_RUNNING) {
-        p_task_cur->TaskState  = STATE_SUSPENDED;
+    if (p_stk->TaskState == STATE_RUNNING) {
+        p_stk->TaskState  = STATE_SUSPENDED;
     }
-    p_task_new = OSTaskGet(OSTCBHighRdyPtr);
-    switch (p_task_new->TaskState) {
-        case STATE_CREATED:                                 /* TaskState updated to STATE_RUNNING once thread runs.   */
-             ResumeThread(p_task_new->ThreadHandle);
-                                                            /* Wait while task is created and ready to run.           */
-             SignalObjectAndWait(p_task_new->SignalPtr, p_task_new->InitSignalPtr, INFINITE, FALSE);
+    p_stk_new = (OS_TASK_STK *)OSTCBHighRdy->OSTCBStkPtr;
+    switch (p_stk_new->TaskState) {
+        case STATE_CREATED:                                             /* TaskState updated to STATE_RUNNING once thread runs.     */
+             ResumeThread(p_stk_new->ThreadHandle);
+                                                                        /* Wait while task is created and until it is ready to run. */
+             SignalObjectAndWait(p_stk_new->SignalPtr, p_stk_new->InitSignalPtr, INFINITE, FALSE);
              break;
 
 
         case STATE_SUSPENDED:
-             p_task_new->TaskState = STATE_RUNNING;
-             SetEvent(p_task_new->SignalPtr);
+             p_stk_new->TaskState = STATE_RUNNING;
+             SetEvent(p_stk_new->SignalPtr);
              break;
 
 
         case STATE_INTERRUPTED:
-             p_task_new->TaskState = STATE_RUNNING;
-             ResumeThread(p_task_new->ThreadHandle);
+             p_stk_new->TaskState = STATE_RUNNING;
+             ResumeThread(p_stk_new->ThreadHandle);
              break;
 
 
-#ifdef OS_CFG_MSG_TRACE_EN
+#if (OS_MSG_TRACE > 0u)
         case STATE_NONE:
              OS_Printf("[OSCtxSw] Error: Invalid state STATE_NONE\nCur    Task[%3.1d] Thread ID %5.0d: '%s'\nNew    Task[%3.1d] Thread ID %5.0d: '%s'\n\n",
-                       p_tcb_cur->Prio,
-                       p_task_cur->ThreadID,
-                       p_task_cur->OSTaskName,
-                       p_tcb_new->Prio,
-                       p_task_new->ThreadID,
-                       p_task_new->OSTaskName);
+                       p_tcb_cur->OSTCBPrio,
+                       p_stk->ThreadID,
+                       p_tcb_cur->OSTCBTaskName,
+                       p_tcb_new->OSTCBPrio,
+                       p_stk_new->ThreadID,
+                       p_tcb_new->OSTCBTaskName);
              return;
 
 
         case STATE_RUNNING:
              OS_Printf("[OSCtxSw] Error: Invalid state STATE_RUNNING\nCur    Task[%3.1d] Thread ID %5.0d: '%s'\nNew    Task[%3.1d] Thread ID %5.0d: '%s'\n\n",
-                       p_tcb_cur->Prio,
-                       p_task_cur->ThreadID,
-                       p_task_cur->OSTaskName,
-                       p_tcb_new->Prio,
-                       p_task_new->ThreadID,
-                       p_task_new->OSTaskName);
+                       p_tcb_cur->OSTCBPrio,
+                       p_stk->ThreadID,
+                       p_tcb_cur->OSTCBTaskName,
+                       p_tcb_new->OSTCBPrio,
+                       p_stk_new->ThreadID,
+                       p_tcb_new->OSTCBTaskName);
              return;
 
 
         case STATE_TERMINATING:
              OS_Printf("[OSCtxSw] Error: Invalid state STATE_TERMINATING\nCur    Task[%3.1d] Thread ID %5.0d: '%s'\nNew    Task[%3.1d] Thread ID %5.0d: '%s'\n\n",
-                       p_tcb_cur->Prio,
-                       p_task_cur->ThreadID,
-                       p_task_cur->OSTaskName,
-                       p_tcb_new->Prio,
-                       p_task_new->ThreadID,
-                       p_task_new->OSTaskName);
+                       p_tcb_cur->OSTCBPrio,
+                       p_stk->ThreadID,
+                       p_tcb_cur->OSTCBTaskName,
+                       p_tcb_new->OSTCBPrio,
+                       p_stk_new->ThreadID,
+                       p_tcb_new->OSTCBTaskName);
              return;
 
 
         case STATE_TERMINATED:
              OS_Printf("[OSCtxSw] Error: Invalid state STATE_TERMINATED\nCur    Task[%3.1d] Thread ID %5.0d: '%s'\nNew    Task[%3.1d] Thread ID %5.0d: '%s'\n\n",
-                       p_tcb_cur->Prio,
-                       p_task_cur->ThreadID,
-                       p_task_cur->OSTaskName,
-                       p_tcb_new->Prio,
-                       p_task_new->ThreadID,
-                       p_task_new->OSTaskName);
+                       p_tcb_cur->OSTCBPrio,
+                       p_stk->ThreadID,
+                       p_tcb_cur->OSTCBTaskName,
+                       p_tcb_new->OSTCBPrio,
+                       p_stk_new->ThreadID,
+                       p_tcb_new->OSTCBTaskName);
              return;
 
 
@@ -919,16 +880,16 @@ void  OSCtxSw (void)
     }
 
 
-    if (p_task_cur->TaskState == STATE_TERMINATING) {
-        OSTaskTerminate(p_task_cur);
+    if (p_stk->Terminate == DEF_TRUE) {
+        OSTaskTerminate(p_stk);
 
         CPU_CRITICAL_EXIT();
 
-        ExitThread(THREAD_EXIT_CODE);                       /* ExitThread() never returns.                            */
+        ExitThread(0u);                                                 /* ExitThread() never returns.                              */
         return;
     }
     CPU_CRITICAL_EXIT();
-    WaitForSingleObject(p_task_cur->SignalPtr, INFINITE);
+    WaitForSingleObject(p_stk->SignalPtr, INFINITE);
     CPU_CRITICAL_ENTER();
 }
 
@@ -944,8 +905,8 @@ void  OSCtxSw (void)
 *
 * Note(s)    : 1) OSIntCtxSw() MUST:
 *                      a) Call OSTaskSwHook() then,
-*                      b) Set OSTCBCurPtr = OSTCBHighRdyPtr,
-*                      c) Set OSPrioCur   = OSPrioHighRdy,
+*                      b) Set OSTCBCur = OSTCBHighRdy,
+*                      c) Set OSPrioCur = OSPrioHighRdy,
 *                      d) Switch to the highest priority task.
 *
 *              2) OSIntCurTaskSuspend() MUST be called prior to OSIntEnter().
@@ -959,8 +920,8 @@ void  OSIntCtxSw (void)
 {
     OSTaskSwHook();
 
-    OSTCBCurPtr = OSTCBHighRdyPtr;
-    OSPrioCur   = OSPrioHighRdy;
+    OSTCBCur  = OSTCBHighRdy;
+    OSPrioCur = OSPrioHighRdy;
 }
 
 
@@ -986,39 +947,39 @@ void  OSIntCtxSw (void)
 CPU_BOOLEAN  OSIntCurTaskSuspend (void)
 {
     OS_TCB       *p_tcb;
-    OS_TASK      *p_task;
+    OS_TASK_STK  *p_stk;
     CPU_BOOLEAN   ret;
 
 
-    p_tcb =  OSTCBCurPtr;
-    p_task = OSTaskGet(p_tcb);
-    switch (p_task->TaskState) {
+    p_tcb =  OSTCBCur;
+    p_stk = (OS_TASK_STK *)p_tcb->OSTCBStkPtr;
+    switch (p_stk->TaskState) {
         case STATE_RUNNING:
-             SuspendThread(p_task->ThreadHandle);
+             SuspendThread(p_stk->ThreadHandle);
              SwitchToThread();
 
-             p_task->TaskState = STATE_INTERRUPTED;
+             p_stk->TaskState = STATE_INTERRUPTED;
 
              ret = DEF_TRUE;
              break;
 
 
-        case STATE_TERMINATING:                             /* Task terminated (run-to-completion or deleted itself). */
-             TerminateThread(p_task->ThreadHandle, THREAD_EXIT_CODE);
-             CloseHandle(p_task->ThreadHandle);
+        case STATE_TERMINATING:                                         /* Task has terminated (run-to-completion/deleted itself).  */
+             TerminateThread(p_stk->ThreadHandle, 0xFFFFFFFF);
+             CloseHandle(p_stk->ThreadHandle);
 
-             OSTaskTerminate(p_task);
+             OSTaskTerminate(p_stk);
 
              ret = DEF_TRUE;
              break;
 
 
-#ifdef OS_CFG_MSG_TRACE_EN
+#if (OS_MSG_TRACE > 0u)
         case STATE_NONE:
              OS_Printf("[OSIntCtxSw Suspend] Error: Invalid state STATE_NONE\nCur    Task[%3.1d] '%s' Thread ID %5.0d\n",
-                       p_tcb->Prio,
-                       p_task->OSTaskName,
-                       p_task->ThreadID);
+                       p_tcb->OSTCBPrio,
+                       p_tcb->OSTCBTaskName,
+                       p_stk->ThreadID);
 
              ret = DEF_FALSE;
              break;
@@ -1026,9 +987,9 @@ CPU_BOOLEAN  OSIntCurTaskSuspend (void)
 
         case STATE_CREATED:
              OS_Printf("[OSIntCtxSw Suspend] Error: Invalid state STATE_CREATED\nCur    Task[%3.1d] '%s' Thread ID %5.0d\n",
-                       p_tcb->Prio,
-                       p_task->OSTaskName,
-                       p_task->ThreadID);
+                       p_tcb->OSTCBPrio,
+                       p_tcb->OSTCBTaskName,
+                       p_stk->ThreadID);
 
              ret = DEF_FALSE;
              break;
@@ -1036,9 +997,9 @@ CPU_BOOLEAN  OSIntCurTaskSuspend (void)
 
         case STATE_INTERRUPTED:
              OS_Printf("[OSIntCtxSw Suspend] Error: Invalid state STATE_INTERRUPTED\nCur    Task[%3.1d] '%s' Thread ID %5.0d\n",
-                       p_tcb->Prio,
-                       p_task->OSTaskName,
-                       p_task->ThreadID);
+                       p_tcb->OSTCBPrio,
+                       p_tcb->OSTCBTaskName,
+                       p_stk->ThreadID);
 
              ret = DEF_FALSE;
              break;
@@ -1046,9 +1007,9 @@ CPU_BOOLEAN  OSIntCurTaskSuspend (void)
 
         case STATE_SUSPENDED:
              OS_Printf("[OSIntCtxSw Suspend] Error: Invalid state STATE_SUSPENDED\nCur    Task[%3.1d] '%s' Thread ID %5.0d\n",
-                       p_tcb->Prio,
-                       p_task->OSTaskName,
-                       p_task->ThreadID);
+                       p_tcb->OSTCBPrio,
+                       p_tcb->OSTCBTaskName,
+                       p_stk->ThreadID);
 
              ret = DEF_FALSE;
              break;
@@ -1056,9 +1017,9 @@ CPU_BOOLEAN  OSIntCurTaskSuspend (void)
 
         case STATE_TERMINATED:
              OS_Printf("[OSIntCtxSw Suspend] Error: Invalid state STATE_TERMINATED\nCur    Task[%3.1d] '%s' Thread ID %5.0d\n",
-                       p_tcb->Prio,
-                       p_task->OSTaskName,
-                       p_task->ThreadID);
+                       p_tcb->OSTCBPrio,
+                       p_tcb->OSTCBTaskName,
+                       p_stk->ThreadID);
 
              ret = DEF_FALSE;
              break;
@@ -1096,68 +1057,68 @@ CPU_BOOLEAN  OSIntCurTaskSuspend (void)
 CPU_BOOLEAN  OSIntCurTaskResume (void)
 {
     OS_TCB       *p_tcb;
-    OS_TASK      *p_task;
+    OS_TASK_STK  *p_stk_new;
     CPU_BOOLEAN   ret;
 
 
-    p_tcb  = OSTCBHighRdyPtr;
-    p_task = OSTaskGet(p_tcb);
-    switch (p_task->TaskState) {
+    p_tcb     =  OSTCBHighRdy;
+    p_stk_new = (OS_TASK_STK *)p_tcb->OSTCBStkPtr;
+    switch (p_stk_new->TaskState) {
         case STATE_CREATED:
-             ResumeThread(p_task->ThreadHandle);
-                                                            /* Wait while task is created and ready to run.           */
-             SignalObjectAndWait(p_task->SignalPtr, p_task->InitSignalPtr, INFINITE, FALSE);
+             ResumeThread(p_stk_new->ThreadHandle);
+                                                                        /* Wait while task is created and until it is ready to run. */
+             SignalObjectAndWait(p_stk_new->SignalPtr, p_stk_new->InitSignalPtr, INFINITE, FALSE);
              ret = DEF_TRUE;
              break;
 
 
         case STATE_INTERRUPTED:
-             p_task->TaskState = STATE_RUNNING;
-             ResumeThread(p_task->ThreadHandle);
+             p_stk_new->TaskState = STATE_RUNNING;
+             ResumeThread(p_stk_new->ThreadHandle);
              ret = DEF_TRUE;
              break;
 
 
         case STATE_SUSPENDED:
-             p_task->TaskState = STATE_RUNNING;
-             SetEvent(p_task->SignalPtr);
+             p_stk_new->TaskState = STATE_RUNNING;
+             SetEvent(p_stk_new->SignalPtr);
              ret = DEF_TRUE;
              break;
 
 
-#ifdef OS_CFG_MSG_TRACE_EN
+#if (OS_MSG_TRACE > 0u)
         case STATE_NONE:
              OS_Printf("[OSIntCtxSw Resume] Error: Invalid state STATE_NONE\nNew    Task[%3.1d] '%s' Thread ID %5.0d\n",
-                       p_tcb->Prio,
-                       p_task->OSTaskName,
-                       p_task->ThreadID);
+                       p_tcb->OSTCBPrio,
+                       p_tcb->OSTCBTaskName,
+                       p_stk_new->ThreadID);
              ret = DEF_FALSE;
              break;
 
 
         case STATE_RUNNING:
              OS_Printf("[OSIntCtxSw Resume] Error: Invalid state STATE_RUNNING\nNew    Task[%3.1d] '%s' Thread ID %5.0d\n",
-                       p_tcb->Prio,
-                       p_task->OSTaskName,
-                       p_task->ThreadID);
+                       p_tcb->OSTCBPrio,
+                       p_tcb->OSTCBTaskName,
+                       p_stk_new->ThreadID);
              ret = DEF_FALSE;
              break;
 
 
         case STATE_TERMINATING:
              OS_Printf("[OSIntCtxSw Resume] Error: Invalid state STATE_TERMINATING\nNew    Task[%3.1d] '%s' Thread ID %5.0d\n",
-                       p_tcb->Prio,
-                       p_task->OSTaskName,
-                       p_task->ThreadID);
+                       p_tcb->OSTCBPrio,
+                       p_tcb->OSTCBTaskName,
+                       p_stk_new->ThreadID);
              ret = DEF_FALSE;
              break;
 
 
         case STATE_TERMINATED:
              OS_Printf("[OSIntCtxSw Resume] Error: Invalid state STATE_TERMINATED\nNew    Task[%3.1d] '%s' Thread ID %5.0d\n",
-                       p_tcb->Prio,
-                       p_task->OSTaskName,
-                       p_task->ThreadID);
+                       p_tcb->OSTCBPrio,
+                       p_tcb->OSTCBTaskName,
+                       p_stk_new->ThreadID);
              ret = DEF_FALSE;
              break;
 
@@ -1177,7 +1138,7 @@ CPU_BOOLEAN  OSIntCurTaskResume (void)
 *********************************************************************************************************
 *                                      WIN32 TASK - OSTickW32()
 *
-* Description: This functions is the Win32 task that generates the tick interrupts for uC/OS-III.
+* Description: This functions is the Win32 task that generates the tick interrupts for uC/OS-II.
 *
 * Arguments  : p_arg        Pointer to argument of the task.
 *
@@ -1189,28 +1150,28 @@ static  DWORD  WINAPI  OSTickW32 (LPVOID  p_arg)
 {
     CPU_BOOLEAN  terminate;
     CPU_BOOLEAN  suspended;
-#if (OS_CFG_TIMER_METHOD_WIN32 == WIN32_MM_TMR)
+#if (TIMER_METHOD == WIN32_MM_TMR)
     HANDLE       wait_signal[2];
 #endif
     CPU_SR_ALLOC();
 
 
-#if (OS_CFG_TIMER_METHOD_WIN32 == WIN32_MM_TMR)
+#if (TIMER_METHOD == WIN32_MM_TMR)
     wait_signal[0] = OSTerminate_SignalPtr;
     wait_signal[1] = OSTick_SignalPtr;
 #endif
 
 
-    (void)p_arg;                                            /* Prevent compiler warning                               */
+    (void)p_arg;                                                        /* Prevent compiler warning                                 */
 
     terminate = DEF_FALSE;
     while (!terminate) {
-#if   (OS_CFG_TIMER_METHOD_WIN32 == WIN32_MM_TMR)
+#if   (TIMER_METHOD == WIN32_MM_TMR)
         switch (WaitForMultipleObjects(2, wait_signal, FALSE, INFINITE)) {
             case WAIT_OBJECT_0 + 1u:
                  ResetEvent(OSTick_SignalPtr);
-#elif (OS_CFG_TIMER_METHOD_WIN32 == WIN32_SLEEP)
-        switch (WaitForSingleObject(OSTerminate_SignalPtr, 1000u / OSCfg_TickRate_Hz)) {
+#elif (TIMER_METHOD == WIN32_SLEEP)
+        switch (WaitForSingleObject(OSTerminate_SignalPtr, 1000u / OS_TICKS_PER_SEC)) {
             case WAIT_TIMEOUT:
 #endif
                  CPU_CRITICAL_ENTER();
@@ -1233,16 +1194,16 @@ static  DWORD  WINAPI  OSTickW32 (LPVOID  p_arg)
 
 
             default:
-#ifdef OS_CFG_MSG_TRACE_EN
-                 OS_Printf("Thread    '%-32s' Error: Invalid signal.\n", "OSTickW32");
+#if (OS_MSG_TRACE > 0u)
+                 OS_Printf("[OSTickW32] Error: Invalid signal.\n");
 #endif
                  terminate = DEF_TRUE;
                  break;
         }
     }
 
-#ifdef OS_CFG_MSG_TRACE_EN
-    OS_Printf("Thread    '%-32s' Terminated.\n", "OSTickW32");
+#if (OS_MSG_TRACE > 0u)
+    OS_Printf("[OSTickW32] Terminated.\n");
 #endif
 
     return (0u);
@@ -1254,7 +1215,7 @@ static  DWORD  WINAPI  OSTickW32 (LPVOID  p_arg)
 *********************************************************************************************************
 *                                      WIN32 TASK - OSTaskW32()
 *
-* Description: This function is a generic Win32 task wrapper for uC/OS-III tasks.
+* Description: This function is a generic Win32 task wrapper for uC/OS-II tasks.
 *
 * Arguments  : p_arg        Pointer to argument of the task.
 *
@@ -1264,66 +1225,30 @@ static  DWORD  WINAPI  OSTickW32 (LPVOID  p_arg)
 
 static  DWORD  WINAPI  OSTaskW32 (LPVOID  p_arg)
 {
-    OS_TASK  *p_task;
-    OS_TCB   *p_tcb;
-    OS_ERR    err;
+    OS_TASK_STK  *p_stk;
+    OS_TCB       *p_tcb;
 
 
-    p_tcb  = (OS_TCB *)p_arg;
-    p_task =  OSTaskGet(p_tcb);
+    p_tcb = (OS_TCB      *)p_arg;
+    p_stk = (OS_TASK_STK *)p_tcb->OSTCBStkPtr;
 
-    p_task->TaskState = STATE_SUSPENDED;
-    WaitForSingleObject(p_task->SignalPtr, INFINITE);
+    p_stk->TaskState = STATE_SUSPENDED;
+    WaitForSingleObject(p_stk->SignalPtr, INFINITE);
 
-    OSSetThreadName(p_task->ThreadID, p_task->OSTaskName);
+    OSSetThreadName(p_stk->ThreadID, p_tcb->OSTCBTaskName);
 
-#ifdef OS_CFG_MSG_TRACE_EN
-    OS_Printf("Task[%3.1d] '%-32s' Running\n",
-              p_tcb->Prio,
-              p_task->OSTaskName);
+#if (OS_MSG_TRACE > 0u)
+    //OS_Printf("Task[%3.1d] '%s' Running\n", p_tcb->OSTCBPrio, p_tcb->OSTCBTaskName);
 #endif
 
-    p_task->TaskState = STATE_RUNNING;
-    SetEvent(p_task->InitSignalPtr);                        /* Indicate task has initialized successfully.            */
+    p_stk->TaskState = STATE_RUNNING;
+    SetEvent(p_stk->InitSignalPtr);                                     /* Indicate task has initialized successfully.              */
 
-    p_task->TaskPtr(p_task->TaskArgPtr);
+    p_stk->Task(p_stk->TaskArgPtr);
 
-    OSTaskDel(p_tcb, &err);                                 /* Thread may exit at OSCtxSw().                          */
+    OSTaskDel(p_tcb->OSTCBPrio);                                        /* Thread may exit at OSCtxSw().                            */
 
     return (0u);
-}
-
-
-/*$PAGE*/
-/*
-*********************************************************************************************************
-*                                             OSTaskGet()
-*
-* Description: This function retrieve the task information structure associated with a task control block.
-*
-* Arguments  : p_tcb        Pointer to the task control block to retrieve the task information structure.
-*********************************************************************************************************
-*/
-
-static  OS_TASK  *OSTaskGet (OS_TCB  *p_tcb)
-{
-    OS_TASK  *p_task;
-
-
-    p_task = (OS_TASK *)p_tcb->StkPtr;                      /* Ptr to task info struct is stored into TCB's .StkPtr.  */
-    if (p_task != NULL) {
-        return (p_task);
-    }
-
-    p_task = OSTaskListPtr;                                 /* Task info struct not in TCB's .StkPtr.                 */
-    while (p_task != NULL) {                                /* Search all tasks.                                      */
-        if (p_task->OSTCBPtr == p_tcb) {
-            return (p_task);
-        }
-        p_task = p_task->NextPtr;
-    }
-
-    return (NULL);
 }
 
 
@@ -1334,68 +1259,30 @@ static  OS_TASK  *OSTaskGet (OS_TCB  *p_tcb)
 *
 * Description: This function handles task termination control signals.
 *
-* Arguments  : p_task       Pointer to the task information structure of the task to clear its control
-*                           signals.
+* Arguments  : p_stk        Pointer to the stack of the task to clear its control signals.
 *********************************************************************************************************
 */
 
-static  void  OSTaskTerminate (OS_TASK  *p_task)
+static  void  OSTaskTerminate (OS_TASK_STK  *p_stk)
 {
-#ifdef OS_CFG_MSG_TRACE_EN
-    OS_TCB   *p_tcb;
+#if (OS_MSG_TRACE > 0u)
+    OS_TCB       *p_tcb;
 #endif
-    OS_TASK  *p_task_next;
-    OS_TASK  *p_task_prev;
-    CPU_SR_ALLOC();
 
 
-#ifdef OS_CFG_MSG_TRACE_EN
-    p_tcb = p_task->OSTCBPtr;
-    if (p_tcb->Prio != OS_PRIO_INIT) {
-        OS_Printf("Task[%3.1d] '%-32s' Deleted\n",
-                  p_tcb->Prio,
-                  p_task->OSTaskName);
-    } else {
-        OS_Printf("Task      '%-32s' Deleted\n",
-                  p_task->OSTaskName);
-    }
+#if (OS_MSG_TRACE > 0u)
+    p_tcb = p_stk->OSTCBPtr;
+    OS_Printf("Task[%3.1d] '%s' Deleted\n", p_tcb->OSTCBPrio, p_tcb->OSTCBTaskName);
 #endif
-    CloseHandle(p_task->InitSignalPtr);
-    CloseHandle(p_task->SignalPtr);
+    CloseHandle(p_stk->InitSignalPtr);
+    CloseHandle(p_stk->SignalPtr);
 
-    p_task->OSTCBPtr      = NULL;
-    p_task->OSTaskName    = NULL;
-    p_task->TaskArgPtr    = NULL;
-    p_task->TaskOpt       = OS_OPT_NONE;
-    p_task->TaskPtr       = NULL;
-    p_task->TaskState     = STATE_TERMINATED;
-    p_task->ThreadID      = 0u;
-    p_task->ThreadHandle  = NULL;
-    p_task->InitSignalPtr = NULL;
-    p_task->SignalPtr     = NULL;
-
-    CPU_CRITICAL_ENTER();
-    p_task_prev = p_task->PrevPtr;
-    p_task_next = p_task->NextPtr;
-
-    if (p_task_prev == (OS_TASK *)0) {
-        OSTaskListPtr = p_task_next;
-        if (p_task_next != (OS_TASK *)0) {
-            p_task_next->PrevPtr = (OS_TASK *)0;
-        }
-        p_task->NextPtr = (OS_TASK *)0;
-
-    } else if (p_task_next == (OS_TASK *)0) {
-        p_task_prev->NextPtr = (OS_TASK *)0;
-        p_task->PrevPtr      = (OS_TASK *)0;
-
-    } else {
-        p_task_prev->NextPtr =  p_task_next;
-        p_task_next->PrevPtr =  p_task_prev;
-        p_task->NextPtr      = (OS_TASK *)0;
-        p_task->PrevPtr      = (OS_TASK *)0;
-    }
-    CPU_CRITICAL_EXIT();
+    p_stk->ThreadID      = 0u;
+    p_stk->ThreadHandle  = NULL;
+    p_stk->InitSignalPtr = NULL;
+    p_stk->SignalPtr     = NULL;
+    p_stk->TaskState     = STATE_TERMINATED;
+    p_stk->OSTCBPtr      = NULL;
 }
 
 
@@ -1421,18 +1308,18 @@ static  BOOL  WINAPI  OSCtrlBreakHandler (DWORD  ctrl)
     ret = FALSE;
 
     switch (ctrl) {
-        case CTRL_C_EVENT:                                  /* CTRL-C pressed.                                        */
-        case CTRL_BREAK_EVENT:                              /* CTRL-BREAK pressed.                                    */
-        case CTRL_CLOSE_EVENT:                              /* Console window is closing.                             */
-        case CTRL_LOGOFF_EVENT:                             /* Logoff has started.                                    */
-        case CTRL_SHUTDOWN_EVENT:                           /* System shutdown in process.                            */
-#ifdef OS_CFG_MSG_TRACE_EN
+        case CTRL_C_EVENT:                                              /* CTRL-C pressed.                                          */
+        case CTRL_BREAK_EVENT:                                          /* CTRL-BREAK pressed.                                      */
+        case CTRL_CLOSE_EVENT:                                          /* Console window is closing.                               */
+        case CTRL_LOGOFF_EVENT:                                         /* Logoff has started.                                      */
+        case CTRL_SHUTDOWN_EVENT:                                       /* System shutdown in process.                              */
+#if (OS_MSG_TRACE > 0u)
              OS_Printf("\nTerminating Scheduler...\n");
 #endif
              SetEvent(OSTerminate_SignalPtr);
 
              if (ctrl == CTRL_CLOSE_EVENT) {
-                 Sleep(500);                                /* Give a chance to OSTickW32 to terminate.               */
+                 Sleep(500);                                            /* Give a chance to OSTickW32 to terminate.                 */
              } else {
                  ret = TRUE;
              }
@@ -1459,7 +1346,7 @@ static  BOOL  WINAPI  OSCtrlBreakHandler (DWORD  ctrl)
 * Returns    : Number of characters written.
 *********************************************************************************************************
 */
-#ifdef OS_CFG_MSG_TRACE_EN
+#if (OS_MSG_TRACE > 0u)
 static  int  OS_Printf (char  *p_str, ...)
 {
     va_list  param;
@@ -1496,9 +1383,7 @@ void  OSDebuggerBreak (void)
     __try {
         DebugBreak();
     }
-    __except(GetExceptionCode() == EXCEPTION_BREAKPOINT ?
-                                   EXCEPTION_EXECUTE_HANDLER :
-                                   EXCEPTION_CONTINUE_SEARCH) {
+    __except(GetExceptionCode() == EXCEPTION_BREAKPOINT ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH) {
         return;
     }
 #else
@@ -1519,10 +1404,12 @@ void  OSDebuggerBreak (void)
 * Arguments  : thread_id    Thread ID.
 *
 *              p_name       Pointer to name of the thread string.
+*
+* Note(s)    : Visual Studio allows threads to be named into debug session.
 *********************************************************************************************************
 */
 
-static  void  OSSetThreadName (DWORD  thread_id, CPU_CHAR  *p_name)
+static  void  OSSetThreadName (DWORD  thread_id, INT8U  *p_name)
 {
 #ifdef _MSC_VER
     THREADNAME_INFO  info;
@@ -1541,7 +1428,3 @@ static  void  OSSetThreadName (DWORD  thread_id, CPU_CHAR  *p_name)
 #endif
 }
 
-
-#ifdef __cplusplus
-}
-#endif

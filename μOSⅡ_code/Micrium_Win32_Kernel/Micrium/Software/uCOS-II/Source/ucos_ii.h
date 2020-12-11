@@ -719,18 +719,9 @@ OS_EXT  INT8U             OSIntNesting;             /* Interrupt nesting level  
 
 OS_EXT  INT8U             OSLockNesting;            /* Multitasking lock nesting level                 */
 
-/*
-*********************************************************************************************************
-*                                               HW00 find
-▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-*/
 OS_EXT  INT8U             OSPrioCur;                /* Priority of current task                        */
 OS_EXT  INT8U             OSPrioHighRdy;            /* Priority of highest priority task               */
-/*
-▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-*                                               HW00 find
-*********************************************************************************************************
-*/
+
 OS_EXT  OS_PRIO           OSRdyGrp;                        /* Ready list group                         */
 OS_EXT  OS_PRIO           OSRdyTbl[OS_RDY_TBL_SIZE];       /* Table of tasks which are ready to run    */
 
@@ -1212,6 +1203,26 @@ void          OSTaskRegSet            (INT8U            prio,
                                        INT32U           value,
                                        INT8U           *perr);
 #endif
+
+/*
+**********************************************************************************************************************************
+*                                                            project2                                                            *
+**********************************************************************************************************************************
+*/
+typedef struct TimeTask {
+    int start_time;            //作業開始時間
+    int work_time;             //工作工作時間
+    int period_time;           //任務期
+    int context_switch;        //任務完成後，清除上下文開關
+    int executive_count;       //任務執行時間
+    int current_start_time;    //作業的實際開始時間
+    int preemptive_time;       //搶占任務時間
+}TimeTask;
+/*
+**********************************************************************************************************************************
+*                                                            project2                                                            *
+**********************************************************************************************************************************
+*/
 
 
 /*

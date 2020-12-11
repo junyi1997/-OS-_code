@@ -34,12 +34,9 @@
 *********************************************************************************************************
 */
 
-
 #include  <cpu.h>
 #include  <lib_mem.h>
 #include  <os.h>
-
-
 
 #include  "app_cfg.h"
 
@@ -56,10 +53,19 @@
 *                                       LOCAL GLOBAL VARIABLES
 *********************************************************************************************************
 */
+#define TASK_STACKSIZE      2048
+#define TASK1_PRIORITY      1
+#define TASK2_PRIORITY      2
+#define TASK3_PRIORITY      3
+#define TASK1_ID            1
+#define TASK2_ID            2
+#define TASK3_ID            3
 
-//static  OS_STK  StartupTaskStk[APP_CFG_STARTUP_TASK_STK_SIZE];
 
-
+static  OS_STK  StartupTaskStk[APP_CFG_STARTUP_TASK_STK_SIZE];
+static  OS_STK  Task1_STK[TASK_STACKSIZE];
+static  OS_STK  Task2_STK[TASK_STACKSIZE];
+static  OS_STK  Task3_STK[TASK_STACKSIZE];
 
 
 /*
@@ -69,7 +75,9 @@
 */
 
 static  void  StartupTask (void  *p_arg);
-
+static  void  task1(void* p_arg);
+static  void  task2(void* p_arg);
+static  void  task3(void* p_arg);
 
 /*
 *********************************************************************************************************
@@ -86,25 +94,6 @@ static  void  StartupTask (void  *p_arg);
 *********************************************************************************************************
 */
 
-/*
-*********************************************************************************************************
-*                                               Project1-2
-▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-*/
-
-int task1_in[3] = { 0, 2, 6 };//task set 1
-int task2_in[3] = { 0, 5, 9 };//task set 2
-int task3_in[3] = { 1, 1, 5 };//task set 3
-
-//P.S. 優先權手動設定
-
-/*
-▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-*                                               Project1-2
-*********************************************************************************************************
-*/
-
-#include <windows.h>
 int  main (void)
 {
 #if OS_TASK_NAME_EN > 0u
@@ -119,8 +108,47 @@ int  main (void)
     CPU_Init();                                                 /* Initialize the uC/CPU services                       */
 
     OSInit();                                                   /* Initialize uC/OS-II                                  */
-/*
-    OSTaskCreateExt( StartupTask,                               // Create the startup task                              
+
+    TimeTask task1_set = {0, 2, 4};      //set : {start time, job time, period time}
+    TimeTask task2_set = {0, 5, 10};      //set : {start time, job time, period time}
+    TimeTask task3_set = {1, 1, 5};      //set : {start time, job time, period time}
+
+    OSTaskCreateExt(
+        task1,
+        &task1_set,
+        &Task1_STK[TASK_STACKSIZE - 1],
+        TASK1_PRIORITY,
+        TASK1_ID,
+        &Task1_STK[0],
+        TASK_STACKSIZE,
+        &task1_set,
+        (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
+
+    OSTaskCreateExt(
+        task2,
+        &task2_set,
+        &Task2_STK[TASK_STACKSIZE - 1],
+        TASK2_PRIORITY,
+        TASK2_ID,
+        &Task2_STK[0],
+        TASK_STACKSIZE,
+        &task2_set,
+        (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
+
+    
+/*    OSTaskCreateExt(
+        task3,
+        &task3_set,
+        &Task3_STK[TASK_STACKSIZE - 1],
+        TASK3_PRIORITY,
+        TASK3_ID,
+        &Task3_STK[0],
+        TASK_STACKSIZE,
+        &task3_set,
+        (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
+
+/*  //sample
+    OSTaskCreateExt( StartupTask,                               Create the startup task                             
                      0,
                     &StartupTaskStk[APP_CFG_STARTUP_TASK_STK_SIZE - 1u],
                      APP_CFG_STARTUP_TASK_PRIO,
@@ -130,82 +158,12 @@ int  main (void)
                      0u,
                     (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
 
-
 #if OS_TASK_NAME_EN > 0u
     OSTaskNameSet(         APP_CFG_STARTUP_TASK_PRIO,
                   (INT8U *)"Startup Task",
                            &os_err);
 #endif
-
 */
-
-    /*
-    *********************************************************************************************************
-    *                                               HW00
-    ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-    */
-
-    #define TASK_STACKSIZE        2048
-
-    #define TASK1_PRIORITY        1
-    #define TASK2_PRIORITY        2
-    #define TASK3_PRIORITY        3
-    
-    #define TASK1_ID              1
-    #define TASK2_ID              2
-    #define TASK3_ID              3
-   
-
-
-        static  void  task1(void* p_arg);
-        static  void  task2(void* p_arg);
-        static  void  task3(void* p_arg);
-
-        static  OS_STK  TASK1_STK[TASK_STACKSIZE];
-        static  OS_STK  TASK2_STK[TASK_STACKSIZE];
-        static  OS_STK  TASK3_STK[TASK_STACKSIZE];
-
-        OSTaskCreateExt(task1,                               /* Create the startup task*/
-            0,
-            &TASK1_STK[TASK_STACKSIZE - 1],
-            TASK1_PRIORITY,
-            TASK1_ID,
-            &TASK1_STK[0],
-            TASK_STACKSIZE,
-            0,
-            (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
-        OSTaskCreateExt(task2,                               /* Create the startup task*/
-            0,
-            &TASK2_STK[TASK_STACKSIZE - 1],
-            TASK2_PRIORITY,
-            TASK2_ID,
-            &TASK2_STK[0],
-            TASK_STACKSIZE,
-            0,
-            (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
-        /*
-         OSTaskCreateExt(task3,                               
-            0,
-            &TASK3_STK[TASK_STACKSIZE - 1],
-            TASK3_PRIORITY,
-            TASK3_ID,
-            &TASK3_STK[0],
-            TASK_STACKSIZE,
-            0,
-            (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));        
-        */
-       
-        
-
-
-
-        OSTimeSet(0);                                               //OS_Time 歸零
-    /*
-    ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-    *                                               HW00
-    *********************************************************************************************************
-    */
-
     OSStart();                                                  /* Start multitasking (i.e. give control to uC/OS-II)   */
 
     while (DEF_ON) {                                            /* Should Never Get Here.                               */
@@ -252,155 +210,23 @@ static  void  StartupTask (void *p_arg)
     }
 }
 
-/*
-*********************************************************************************************************
-*                                               HW00
-▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-
-void  task1(void* p_arg) {
+void task1(void *p_arg) {
     (void)p_arg;
-    while (1) {
-        //printf("%d\t", OSTimeGet());      //print OSTime
-        //printf("Task(1)\n");              //test delay
-        OSTimeDly(1);
-        //printf("delay3\n");
+    while (1) { 
+        ;
     }
 }
 
-void  task2(void* p_arg) {
+void task2(void* p_arg) {
     (void)p_arg;
     while (1) {
-        //printf("%d\t", OSTimeGet());      //print OSTime
-        //printf("Task(2)\n");              //test delay
-        OSTimeDly(1);
-        // printf("delay6\n");
+        ;
     }
 }
 
-▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-*                                               HW00
-*********************************************************************************************************
-*/
-
-
-
-/*
-*********************************************************************************************************
-*                                               Project1-2  2個task用
-▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-
-void  task1(void* p_arg) {
+void task3(void* p_arg) {
     (void)p_arg;
     while (1) {
-        Sleep(task1_in[1]*1000);//設定執行時間
-        if (task1_in[2] > task2_in[2]) {
-            if (task2_in[0] == 0) {OSTimeDly(task1_in[2] - (task1_in[2] / task2_in[2] * task2_in[1] + task1_in[1]) + task2_in[1]);}//有arrival time的
-            else { OSTimeDly(task1_in[2] - (task1_in[2] / task2_in[2] * task2_in[1] + task1_in[1])); }//優先權比較高的
-        }
-        else if (task1_in[2] < task2_in[2]) {
-            OSTimeDly(task1_in[2] - task1_in[1]);//優先權比較低的
-        }
+        ;
     }
 }
-
-void  task2(void* p_arg) {
-    (void)p_arg;
-    while (1) {
-        Sleep(task2_in[1] * 1000);//設定執行時間
-        if (task2_in[2] > task1_in[2]) {
-            if (task1_in[0] == 0) {OSTimeDly(task2_in[2] - (task2_in[2] / task1_in[2] * task1_in[1] + task2_in[1]) + task1_in[1]);}//有arrival time的
-            else { OSTimeDly(task2_in[2] - (task2_in[2] / task1_in[2] * task1_in[1] + task2_in[1])); }//優先權比較高的
-            
-        }
-        else if(task2_in[2] < task1_in[2]) {
-            OSTimeDly(task2_in[2] - task2_in[1]);//優先權比較低的
-        }
-    }
-}
-
-▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-*                                               Project1-2  2個task用
-*********************************************************************************************************
-*/
-
-/*
-*********************************************************************************************************
-*                                               Project1-2  3個task用--針對Task set 4 TaskID 1-->2-->3 PRIORITY 2-->3-->1
-▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-
-void  task1(void* p_arg) {
-    (void)p_arg;
-    while (1) {
-        Sleep(task1_in[1]*1000);//設定執行時間
-        OSTimeDly(task1_in[2] - task1_in[1] - task3_in[1] + task3_in[0]); //優先權次高的
-        //OSTimeDly(2);
-        //printf("OSTimeDly1=%d\n", task1_in[2] - task1_in[1] - task3_in[1] + task3_in[0]);
-    }
-}
-
-void  task2(void* p_arg) {
-    (void)p_arg;
-    while (1) {
-        Sleep(task2_in[1] * 1000);//設定執行時間
-        OSTimeDly(task2_in[2] / task3_in[2]* task3_in[1]+ task1_in[1]); //優先權最高的
-        //OSTimeDly(6);
-        //printf("OSTimeDly2=%d\n", (task2_in[2] / task3_in[2] * task3_in[1]) + task1_in[1]);
-    }
-}
-
-void  task3(void* p_arg) {
-    (void)p_arg;
-    while (1) {
-        Sleep(task3_in[1] * 1000);//設定執行時間
-        OSTimeDly(task3_in[2] - task3_in[1]);//優先權最低的
-        //OSTimeDly(4);
-        //printf("OSTimeDly3=%d\n", task3_in[2] - task3_in[1]);
-    }
-}
-
-▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-*                                               Project1-2  3個task用--針對Task set 4 TaskID 1-->2-->3 PRIORITY 2-->3-->1
-*********************************************************************************************************
-*/
-
-/*
-*********************************************************************************************************
-*                                               Project2-1-1
-▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-*/
-int t1 = 0, t2 = 0, c1 = 0, c2 = 0;
-
-void  task1(void* p_arg) {
-    (void)p_arg;
-    while (1) {
-        
-        t1 = (c1 * task1_in[2]) - OSTimeGet();
-        t2 = (c2 * task2_in[2]) - OSTimeGet();
-        printf("%d  task1  t1= %d  t2= %d c1=%d \n", OSTimeGet(), t1, t2,c1);
-        c1++;
-        OSTimeDly(task1_in[2]);
-        
-        
-    }
-}
-
-void  task2(void* p_arg) {
-    (void)p_arg;
-    while (1) {
-        
-        t1 = (c1 * task1_in[2]) - OSTimeGet();
-        t2 = (c2 * task2_in[2]) - OSTimeGet();
-        printf("%d  task2  t1= %d  t2= %d c2=%d \n", OSTimeGet(), t1, t2, c2);
-        c2++;
-        //if (t1 < t2) {}
-        OSTimeDly(task2_in[2]);
-    }
-}
-
-
-/*
-▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-*                                               Project2-1-1
-*********************************************************************************************************
-*/
-
