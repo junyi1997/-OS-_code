@@ -1,5 +1,5 @@
 ﻿  os_core.c
-D:\學校\台科\10901\嵌入式作業系統實作 Embedded OS Implementation\-OS-_code\μOSⅡ_code\Micrium_Win32_Kernel\Micrium\Software\uCOS-II\Source\os_core.c(1871,59): warning C4018: '<': signed/unsigned 不相符
-D:\學校\台科\10901\嵌入式作業系統實作 Embedded OS Implementation\-OS-_code\μOSⅡ_code\Micrium_Win32_Kernel\Micrium\Software\uCOS-II\Source\os_core.c(1937,49): warning C4018: '>': signed/unsigned 不相符
-D:\學校\台科\10901\嵌入式作業系統實作 Embedded OS Implementation\-OS-_code\μOSⅡ_code\Micrium_Win32_Kernel\Micrium\Software\uCOS-II\Source\os_core.c(1942,27): warning C4013: 'system' 未定義; 假設 extern 傳回整數
+D:\學校\台科\10901\嵌入式作業系統實作 Embedded OS Implementation\-OS-_code\μOSⅡ_code\Micrium_Win32_Kernel\Micrium\Software\uCOS-II\Source\os_core.c(1889,59): warning C4018: '<': signed/unsigned 不相符
+D:\學校\台科\10901\嵌入式作業系統實作 Embedded OS Implementation\-OS-_code\μOSⅡ_code\Micrium_Win32_Kernel\Micrium\Software\uCOS-II\Source\os_core.c(1934,49): warning C4018: '>': signed/unsigned 不相符
+D:\學校\台科\10901\嵌入式作業系統實作 Embedded OS Implementation\-OS-_code\μOSⅡ_code\Micrium_Win32_Kernel\Micrium\Software\uCOS-II\Source\os_core.c(1939,27): warning C4013: 'system' 未定義; 假設 extern 傳回整數
   OS2.vcxproj -> D:\學校\台科\10901\嵌入式作業系統實作 Embedded OS Implementation\-OS-_code\μOSⅡ_code\Micrium_Win32_Kernel\Microsoft\Windows\Kernel\OS2\VS\Debug\OS2.exe

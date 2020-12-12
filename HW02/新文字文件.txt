@@ -80,7 +80,7 @@ Tick         Event       CurrentTask ID  NextTask ID     ResponseTime    # of Co
 10        Completion     task(1)(1)      task(3)(0)           2                  2
 12        Aperiodic job(0) arrives and sets CUS server's deadline as 27 
 13        Completion     task(3)(0)      task(4)(0)           8                  4
-14        Aperiodic job(1) arrives and sets CUS server's deadline as 28
+14        Aperiodic job(1) arrives and sets CUS server's deadline as 24
 14        Preemption     task(4)(0)      task(4)(1)
 16        Aperiodic job(1) is finish.
 16        Completion     task(4)(1)      task(1)(2)           2                  2
@@ -95,3 +95,17 @@ Tick         Event       CurrentTask ID  NextTask ID     ResponseTime    # of Co
 35        Completion     task(1)(4)      task(63)             2                  2
 40        Preemption     task(63)        task(1)(5)
 42        Completion     task(1)(5)      task(2)(3)           2                  2
+
+
+
+
+
+
+
+
+
+
+
+
+
+

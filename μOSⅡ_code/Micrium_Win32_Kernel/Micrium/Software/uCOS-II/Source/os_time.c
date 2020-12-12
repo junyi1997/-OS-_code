@@ -86,6 +86,7 @@ void  OSTimeDly (INT32U ticks)
 *                                               Project1-2
 ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
 */
+
 void  OSTimeDly_arr(INT32U ticks ,OS_TCB *task_123) //把arrival time tick 與 taskName 送進來
 {
     INT8U      y;
@@ -114,11 +115,53 @@ void  OSTimeDly_arr(INT32U ticks ,OS_TCB *task_123) //把arrival time tick 與 tas
         //OS_Sched();                              /* Find next task to run!                             */
     }
 }
+
 /*
 ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 *                                               Project1-2
 *********************************************************************************************************
 */
+
+
+void  OSTimeDly_EDF(INT32U ticks, OS_TCB* task_123, INT32U t1, INT32U t2, INT32U t3, INT32U j0, INT32U j1) 
+{
+    INT8U      y;
+    int min_task = 0;
+#if OS_CRITICAL_METHOD == 3u                     /* Allocate storage for CPU status register           */
+    OS_CPU_SR  cpu_sr = 0u;
+#endif
+    if (OSIntNesting > 0u) {                     /* See if trying to call from an ISR                  */
+        return;
+    }
+    if (OSLockNesting > 0u) {                    /* See if called with scheduler locked                */
+        return;
+    }
+    if (ticks > 0u) {                            /* 0 means no delay!                                  */
+        OS_ENTER_CRITICAL();
+        y = task_123->OSTCBY;        /* Delay current task                                 */
+        OSRdyTbl[y] &= (OS_PRIO)~task_123->OSTCBBitX;
+        OS_TRACE_TASK_SUSPENDED(task_123);
+        if (OSRdyTbl[y] == 0u) {
+            OSRdyGrp &= (OS_PRIO)~task_123->OSTCBBitY;
+        }
+        task_123->OSTCBDly = ticks;              /* Load ticks in TCB                                  */
+        OS_TRACE_TASK_DLY(ticks);
+        OS_EXIT_CRITICAL();
+        int t11 = t1-mod(OSTimeGet(),t1);    //計算task1與deadline的距離
+        int t12 = t2 - mod(OSTimeGet(), t2); //計算task2與deadline的距離
+        int t13 = t3 - mod(OSTimeGet(), t3); //計算task3與deadline的距離
+        int j10 = j0 - mod(OSTimeGet(), j0); //計算job0與deadline的距離
+        int j11 = j1 - mod(OSTimeGet(), j1); //計算job1與deadline的距離
+        if (t11 < t12 && t11 < t13 && t11 < j10 && t11 < j11) { min_task = 1; }//如果task1最接近deadline
+        if (t12 < t11 && t12 < t13 && t12 < j10 && t12 < j11) { min_task = 2; }//如果task2最接近deadline
+        if (t13 < t12 && t13 < t11 && t13 < j10 && t13 < j11) { min_task = 3; }//如果task3最接近deadline
+        if (j10 < t12 && j10 < t13 && j0 < j11 && j0 < j11) { min_task = 4; }//如果job0最接近deadline
+        if (j11 < t12 && j11 < t13 && j1 < j10 && j1 < t11) { min_task = 5; }//如果job1最接近deadline
+
+        if (task_123 != min_task) { OS_Sched(); }//如果現在的task ID 不是離deadline最近的
+                                    /* Find next task to run!                             */
+    }
+}
 
 /*
 *********************************************************************************************************
