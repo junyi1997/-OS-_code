@@ -1786,7 +1786,7 @@ void  OS_Sched (void)
 
 //project 1
 
-
+int c = 0; int a = 0;
 static  void  OS_SchedNew (void)
 {
 #if OS_LOWEST_PRIO <= 63u                        /* See if we support up to 64 tasks                   */
@@ -1821,7 +1821,7 @@ static  void  OS_SchedNew (void)
     **********************************************************************************************************************************
     *                                                            project2                                                            *
     **********************************************************************************************************************************
-    */
+    
     
     int jo_1[3] = { 12,3,28 };
     int j1_1[3] = { 14,2,39 };
@@ -1829,16 +1829,31 @@ static  void  OS_SchedNew (void)
     d0 = jo_1[0] + (jo_1[1]*10 / t4);
     d1 = j1_1[0] + (j1_1[1]*10 / t4);
     int j0_in = 0; int j1_in = 0;
-
+    
     if (OSTimeGet() == jo_1[0]) {
         printf("%-5d Aperiodic job(0) arrives and sets CUS server's deadline as %d\n",OSTimeGet(),d0);
     }
     else if (OSTimeGet() == j1_1[0]) {
         printf("%-5d Aperiodic job(1) arrives and sets CUS server's deadline as %d\n", OSTimeGet(), d1);
     }
+    
+    
+    int min_task = 0;
+    int t11 = 8 - (OSTimeGet() % 8);    //計算task1與deadline的距離
+    int t12 = 10 - (OSTimeGet() % 10); //計算task2與deadline的距離
+    int t13 = 20 - (OSTimeGet() % 20); //計算task3與deadline的距離
+    int j10 = 28 - (OSTimeGet() % 28); //計算job0與deadline的距離
+    int j11 = 39 - (OSTimeGet() % 39); //計算job1與deadline的距離
+    if (t11 < t12 && t11 < t13 && t11 < j10 && t11 < j11) { min_task = 1; }//如果task1最接近deadline
+    if (t12 < t11 && t12 < t13 && t12 < j10 && t12 < j11) { min_task = 2; }//如果task2最接近deadline
+    if (t13 < t12 && t13 < t11 && t13 < j10 && t13 < j11) { min_task = 3; }//如果task3最接近deadline
+    if (j10 < t12 && j10 < t13 && j10 < j11 && j10 < j11) { min_task = 4; }//如果job0最接近deadline
+    if (j11 < t12 && j11 < t13 && j11 < j10 && j11 < t11) { min_task = 5; }//如果job1最接近deadline
+    //printf("%d \t %d \n",OSTimeGet(),min_task);
+
     int responsetime = 0;
     int context_switch = 0;
-
+    
     OS_TCB* ptcb;
 
     if (OSPrioHighRdy != 0) {                                                   //程式開始執行
@@ -1846,34 +1861,39 @@ static  void  OS_SchedNew (void)
         TimeTask* point_t = ptcb->OSTCBExtPtr;                                  //指向自定義數據以進行TCB擴展的指針
         
         if (point_t != 0) {                                                     //如果不是idle task
+            //if (OSTimeGet() == 6) { OSPrioHighRdy = (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]]); }
+            //if (OSTimeGet() == 7) { OSPrioHighRdy = (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]]+1); }
+            //if (OSPrioHighRdy != (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]])) { printf("switch............\n"); }
             //如果是completion_task
             if (OSTimeGet() - point_t->current_start_time == point_t->work_time + point_t->preemptive_time) {
                 printf("%-6d", OSTimeGet());
                 printf("%-14s", "Completion");
+                a = 0;
                 if (OSTimeGet() % point_t->period_time == 0) {
                     responsetime = point_t->period_time;                       //計算respondtime
                 }
                 else {
                     responsetime = OSTimeGet() % point_t->period_time - point_t->start_time; //計算respondtime
                 }
-                if (ptcb->OSTCBId == 5 && j1_in != 0) { j1_in = 1; printf("%-5s%d%-2s%d%-9s", "task(", 4, ")(", 1, ")"); } //如果task ID 為5的時候 ，更改print task ID為4
-                if (ptcb->OSTCBId == 4 && j0_in != 0) { j0_in = 1; printf("%-5s%d%-2s%d%-9s", "task(", ptcb->OSTCBId, ")(", point_t->executive_count, ")");}
-                else { printf("%-5s%d%-2s%d%-9s", "task(", ptcb->OSTCBId, ")(", point_t->executive_count, ")"); } //print 現在的 task ID
-                
+                //if (ptcb->OSTCBId == 5 && j1_in != 0) { j1_in = 1; printf("%-5s%d%-2s%d%-9s", "task(", 4, ")(", 1, ")"); } //如果task ID 為5的時候 ，更改print task ID為4
+                //if (ptcb->OSTCBId == 4 && j0_in != 0) { j0_in = 1; printf("%-5s%d%-2s%d%-9s", "task(", ptcb->OSTCBId, ")(", point_t->executive_count, ")");}
+                //else { printf("%-5s%d%-2s%d%-9s", "task(", ptcb->OSTCBId, ")(", point_t->executive_count, ")"); } //print 現在的 task ID
+                printf("%-5s%d%-2s%d%-9s", "task(", ptcb->OSTCBId, ")(", point_t->executive_count, ")");
+                c = 0;
                 //Delay current task
                 if (point_t->period_time * (point_t->executive_count + 1) - OSTimeGet() + point_t->start_time != 0) {
-                    OSTimeDly_EDF(ptcb->OSTCBId, ptcb->OSTCBDly, 8, 10, 20, 28, 39);
-                    //OS_ENTER_CRITICAL();
-                    //y = ptcb->OSTCBY;                                   //Delay current task                                 
-                    //OSRdyTbl[y] &= (OS_PRIO)~ptcb->OSTCBBitX;
-                    //OS_TRACE_TASK_SUSPENDED(ptcb);
-                    //if (OSRdyTbl[y] == 0u) {
-                    //    OSRdyGrp &= (OS_PRIO)~ptcb->OSTCBBitY;
-                    //}
-                    //ptcb->OSTCBDly = point_t->period_time * (point_t->executive_count + 1) - OSTimeGet() + point_t->start_time;             //Load ticks in TCB                                  
-                    //OS_TRACE_TASK_DLY(point_t->period_time * (point_t->executive_count + 1) - OSTimeGet() + point_t->start_time);
-                    //OS_EXIT_CRITICAL();
-                    //y = OSUnMapTbl[OSRdyGrp];
+                    //OSTimeDly_EDF(ptcb->OSTCBId, ptcb->OSTCBDly, 8, 10, 20, 28, 39);
+                    OS_ENTER_CRITICAL();
+                    y = ptcb->OSTCBY;                                   //Delay current task                                 
+                    OSRdyTbl[y] &= (OS_PRIO)~ptcb->OSTCBBitX;
+                    OS_TRACE_TASK_SUSPENDED(ptcb);
+                    if (OSRdyTbl[y] == 0u) {
+                        OSRdyGrp &= (OS_PRIO)~ptcb->OSTCBBitY;
+                    }
+                    ptcb->OSTCBDly = point_t->period_time * (point_t->executive_count + 1) - OSTimeGet() + point_t->start_time;             //Load ticks in TCB                                  
+                    OS_TRACE_TASK_DLY(point_t->period_time * (point_t->executive_count + 1) - OSTimeGet() + point_t->start_time);
+                    OS_EXIT_CRITICAL();
+                    y = OSUnMapTbl[OSRdyGrp];
                 }
                 point_t->executive_count++;
                 if (OSPrioHighRdy != (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]]))
@@ -1882,12 +1902,15 @@ static  void  OS_SchedNew (void)
                 point_t->context_switch = 0;        //contextswitch歸零
                 point_t->preemptive_time = 0;       //preemptivetime歸零
             }
+            //OSPrioHighRdy = (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]])
             //如果是preemption_task 
             if (OSTimeGet() - point_t->current_start_time < point_t->work_time + point_t->preemptive_time && 
                 OSPrioHighRdy != (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]]) ) {
                 printf("%-6d", OSTimeGet());
                 printf("%-14s", "Preemption");
+                a = 1;
                 printf("%-5s%d%-2s%d%-9s", "task(", ptcb->OSTCBId, ")(", point_t->executive_count, ")");//print 現在的 task ID
+                c = 0;
                 point_t->context_switch++;  //計算conextswitch
                 
                 if (point_t->preemptive_time > 0) {point_t->preemptive_time = OSTimeGet() - point_t->preemptive_time;}//更新preemptivetime 
@@ -1906,9 +1929,11 @@ static  void  OS_SchedNew (void)
             ptcb = OSTCBPrioTbl[OSPrioHighRdy];
             point_t = ptcb->OSTCBExtPtr;
             if (point_t != 0) {
-                if (ptcb->OSTCBId == 4) { printf("%-5d Aperiodic job(0) is finish.\n", OSTimeGet()); }
-                if (ptcb->OSTCBId == 5) { printf("%-5d Aperiodic job(1) is finish.\n", OSTimeGet()); }
-                printf("%-5s%d%-2s%d%-15s", "task(", ptcb->OSTCBId, ")(", point_t->executive_count, ")");//print下一個task ID
+                //if (ptcb->OSTCBId == 4) { printf("%-5d Aperiodic job(0) is finish.\n", OSTimeGet()); }
+                //if (ptcb->OSTCBId == 5) { printf("%-5d Aperiodic job(1) is finish.\n", OSTimeGet()); }
+                //if (c == 0) { printf("%-5s%d%-2s%d%-15s", "task(", ptcb->OSTCBId, ")(", point_t->executive_count, ")"); c = 1; }//print下一個task ID
+                if (a == 0) { if (c == 0) { printf("%-5s%d%-2s%d%-15s", "task(", ptcb->OSTCBId, ")(", point_t->executive_count, ")"); c = 1; } }
+                else { printf("%-5s%d%-2s%d%-15s\n", "task(", ptcb->OSTCBId, ")(", point_t->executive_count, ")"); }
                 if (OSPrioHighRdy != OSPrioCur) {point_t->context_switch++;}//計算conextswitch
                 if (point_t->preemptive_time == 0) {point_t->current_start_time = OSTimeGet();}//儲存task start time
                 if (point_t->preemptive_time > 0) {point_t->preemptive_time = OSTimeGet() - point_t->preemptive_time;}//更新preemptive time
@@ -1923,9 +1948,10 @@ static  void  OS_SchedNew (void)
                 printf("%-20d%d\n", responsetime, context_switch);
                 responsetime = 0;
             }
-            else {
-                printf("\n");
-            }
+            //else {
+                //printf("\n");
+                //if (c == 0) {  c = 1; }
+            //}
             //處理missdeadline
             ptcb = OSTCBList;
             while (ptcb != (OS_TCB*)0) {

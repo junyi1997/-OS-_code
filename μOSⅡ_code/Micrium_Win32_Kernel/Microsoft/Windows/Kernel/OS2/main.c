@@ -39,7 +39,7 @@
 #include  <os.h>
 
 #include  "app_cfg.h"
-
+#include "windows.h"
 
 /*
 *********************************************************************************************************
@@ -125,28 +125,28 @@ int  main (void)
 
     OSTaskCreateExt(
         task1,
-        &task1_set,
+        0,//&task1_set,
         &Task1_STK[TASK_STACKSIZE - 1],
         TASK1_PRIORITY,
         TASK1_ID,
         &Task1_STK[0],
         TASK_STACKSIZE,
-        &task1_set,
+        0,//&task1_set,
         (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
 
     OSTaskCreateExt(
         task2,
-        &task2_set,
+        0,//&task2_set,
         &Task2_STK[TASK_STACKSIZE - 1],
         TASK2_PRIORITY,
         TASK2_ID,
         &Task2_STK[0],
         TASK_STACKSIZE,
-        &task2_set,
+        0,//&task2_set,
         (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
 
 
-    OSTaskCreateExt(
+    /*OSTaskCreateExt(
         task3,
         &task3_set,
         &Task3_STK[TASK_STACKSIZE - 1],

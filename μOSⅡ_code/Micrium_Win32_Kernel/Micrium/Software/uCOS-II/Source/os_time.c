@@ -147,11 +147,11 @@ void  OSTimeDly_EDF(INT32U ticks, OS_TCB* task_123, INT32U t1, INT32U t2, INT32U
         task_123->OSTCBDly = ticks;              /* Load ticks in TCB                                  */
         OS_TRACE_TASK_DLY(ticks);
         OS_EXIT_CRITICAL();
-        int t11 = t1-mod(OSTimeGet(),t1);    //計算task1與deadline的距離
-        int t12 = t2 - mod(OSTimeGet(), t2); //計算task2與deadline的距離
-        int t13 = t3 - mod(OSTimeGet(), t3); //計算task3與deadline的距離
-        int j10 = j0 - mod(OSTimeGet(), j0); //計算job0與deadline的距離
-        int j11 = j1 - mod(OSTimeGet(), j1); //計算job1與deadline的距離
+        int t11 = t1-(OSTimeGet()%t1);    //計算task1與deadline的距離
+        int t12 = t2 - (OSTimeGet() % t2); //計算task2與deadline的距離
+        int t13 = t3 - (OSTimeGet() % t3); //計算task3與deadline的距離
+        int j10 = j0 - (OSTimeGet() % j0); //計算job0與deadline的距離
+        int j11 = j1 - (OSTimeGet() % j1); //計算job1與deadline的距離
         if (t11 < t12 && t11 < t13 && t11 < j10 && t11 < j11) { min_task = 1; }//如果task1最接近deadline
         if (t12 < t11 && t12 < t13 && t12 < j10 && t12 < j11) { min_task = 2; }//如果task2最接近deadline
         if (t13 < t12 && t13 < t11 && t13 < j10 && t13 < j11) { min_task = 3; }//如果task3最接近deadline
@@ -162,6 +162,8 @@ void  OSTimeDly_EDF(INT32U ticks, OS_TCB* task_123, INT32U t1, INT32U t2, INT32U
                                     /* Find next task to run!                             */
     }
 }
+
+
 
 /*
 *********************************************************************************************************
