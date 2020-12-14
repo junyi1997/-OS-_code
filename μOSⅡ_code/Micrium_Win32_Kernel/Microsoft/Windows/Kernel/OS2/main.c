@@ -116,8 +116,8 @@ int  main (void)
 
     OSInit();                                                   /* Initialize uC/OS-II                                  */
 
-    TimeTask task1_set = {0, 2, 6};      //set : {start time, work time, period time}
-    TimeTask task2_set = {0, 5, 9};      //set : {start time, work time, period time}
+    TimeTask task1_set = { 0, 2, 8};      //set : {start time, work time, period time}
+    TimeTask task2_set = { 0, 3, 10};      //set : {start time, work time, period time}
     TimeTask task3_set = { 0, 5, 20 };      //set : {start time, work time, period time}
     TimeTask task4_set = { 12, 3, 28 };      //set : {start time, work time, period time}
     TimeTask task5_set = { 14, 2, 39 };      //set : {start time, work time, period time}
@@ -125,28 +125,28 @@ int  main (void)
 
     OSTaskCreateExt(
         task1,
-        0,//&task1_set,
+        &task1_set,
         &Task1_STK[TASK_STACKSIZE - 1],
         TASK1_PRIORITY,
         TASK1_ID,
         &Task1_STK[0],
         TASK_STACKSIZE,
-        0,//&task1_set,
+        &task1_set,
         (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
 
     OSTaskCreateExt(
         task2,
-        0,//&task2_set,
+        &task2_set,
         &Task2_STK[TASK_STACKSIZE - 1],
         TASK2_PRIORITY,
         TASK2_ID,
         &Task2_STK[0],
         TASK_STACKSIZE,
-        0,//&task2_set,
+        &task2_set,
         (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
 
 
-    /*OSTaskCreateExt(
+    OSTaskCreateExt(
         task3,
         &task3_set,
         &Task3_STK[TASK_STACKSIZE - 1],
@@ -158,7 +158,7 @@ int  main (void)
         (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
 
 
-    OSTaskCreateExt(
+    /*OSTaskCreateExt(
         task4,
         &task4_set,
         &Task4_STK[TASK_STACKSIZE - 1],

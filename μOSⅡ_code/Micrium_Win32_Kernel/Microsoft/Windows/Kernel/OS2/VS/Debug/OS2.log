@@ -1,3 +1,4 @@
-﻿  main.c
-D:\學校\台科\10901\嵌入式作業系統實作 Embedded OS Implementation\-OS-_code\μOSⅡ_code\Micrium_Win32_Kernel\Microsoft\Windows\Kernel\OS2\main.c(107,17): warning C4101: 'os_err': 未參考的區域變數
-  OS2.vcxproj -> D:\學校\台科\10901\嵌入式作業系統實作 Embedded OS Implementation\-OS-_code\μOSⅡ_code\Micrium_Win32_Kernel\Microsoft\Windows\Kernel\OS2\VS\Debug\OS2.exe
+﻿  os_core.c
+C:\Users\MMLAB\Desktop\新增資料夾\-OS-_code\μOSⅡ_code\Micrium_Win32_Kernel\Micrium\Software\uCOS-II\Source\os_core.c(1915,59): warning C4018: '<': signed/unsigned 不相符
+C:\Users\MMLAB\Desktop\新增資料夾\-OS-_code\μOSⅡ_code\Micrium_Win32_Kernel\Micrium\Software\uCOS-II\Source\os_core.c(1979,49): warning C4018: '>': signed/unsigned 不相符
+  OS2.vcxproj -> C:\Users\MMLAB\Desktop\新增資料夾\-OS-_code\μOSⅡ_code\Micrium_Win32_Kernel\Microsoft\Windows\Kernel\OS2\VS\Debug\OS2.exe
