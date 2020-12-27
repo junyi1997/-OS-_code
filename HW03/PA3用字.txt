@@ -1,0 +1,34 @@
+Task1
+Task1 get R1
+Task1 release R1
+Task1 get R2
+Task1 release R2
+Task2
+Task2 get R1
+Task2 release R1
+Task2 get R2
+Task2 release R2
+Task3
+Task3 get R1
+Task3 release R1
+Task3 get R2
+Task3 release R2
+Task63
+
+
+Task1
+Task1 get R1        1->1
+Task1 release R1    1->1
+Task1 get R2        1->1
+Task1 release R2    1->1
+Task2
+Task2 get R1        1->1
+Task2 release R1    1->1
+Task2 get R2        1->1
+Task2 release R2    1->1
+Task3
+Task3 get R1        1->1
+Task3 release R1    1->1
+Task3 get R2        1->1
+Task3 release R2    1->1
+Task63
