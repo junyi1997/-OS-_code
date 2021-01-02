@@ -39,7 +39,6 @@
 *********************************************************************************************************
 */
 
-
 #include  <stdarg.h>
 #include  <stdio.h>
 
@@ -83,7 +82,6 @@
 
 #define  APP_TRACE_INFO(x)    ((APP_TRACE_LEVEL >= TRACE_LEVEL_INFO)  ? (void)(APP_TRACE x) : (void)0)
 #define  APP_TRACE_DBG(x)     ((APP_TRACE_LEVEL >= TRACE_LEVEL_DBG)   ? (void)(APP_TRACE x) : (void)0)
-
 
 
 /*

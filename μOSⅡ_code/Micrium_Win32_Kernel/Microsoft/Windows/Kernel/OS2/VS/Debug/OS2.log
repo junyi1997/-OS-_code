@@ -1,2 +1,3 @@
 ﻿  os_core.c
+D:\學校\台科\10901\EE5036701 嵌入式作業系統實作 Embedded OS Implementation\-OS-_code\μOSⅡ_code\Micrium_Win32_Kernel\Micrium\Software\uCOS-II\Source\os_core.c(874,22): warning C4013: 'OSTimeDly_arr' 未定義; 假設 extern 傳回整數
   OS2.vcxproj -> D:\學校\台科\10901\EE5036701 嵌入式作業系統實作 Embedded OS Implementation\-OS-_code\μOSⅡ_code\Micrium_Win32_Kernel\Microsoft\Windows\Kernel\OS2\VS\Debug\OS2.exe

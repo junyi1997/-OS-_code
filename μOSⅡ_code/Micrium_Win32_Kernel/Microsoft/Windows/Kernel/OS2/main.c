@@ -34,12 +34,15 @@
 *********************************************************************************************************
 */
 
+
 #include  <cpu.h>
 #include  <lib_mem.h>
 #include  <os.h>
 
+
+
 #include  "app_cfg.h"
-#include "windows.h"
+
 
 /*
 *********************************************************************************************************
@@ -47,29 +50,16 @@
 *********************************************************************************************************
 */
 
+
 /*
 *********************************************************************************************************
 *                                       LOCAL GLOBAL VARIABLES
 *********************************************************************************************************
 */
-#define TASK_STACKSIZE      2048
-#define TASK1_PRIORITY      1
-#define TASK2_PRIORITY      2
-#define TASK3_PRIORITY      3
-#define TASK4_PRIORITY      5
-#define TASK5_PRIORITY      4
-#define TASK1_ID            1
-#define TASK2_ID            2
-#define TASK3_ID            3
-#define TASK4_ID            4
-#define TASK5_ID            5
 
-static  OS_STK  StartupTaskStk[APP_CFG_STARTUP_TASK_STK_SIZE];
-static  OS_STK  Task1_STK[TASK_STACKSIZE];
-static  OS_STK  Task2_STK[TASK_STACKSIZE];
-static  OS_STK  Task3_STK[TASK_STACKSIZE];
-static  OS_STK  Task4_STK[TASK_STACKSIZE];
-static  OS_STK  Task5_STK[TASK_STACKSIZE];
+//static  OS_STK  StartupTaskStk[APP_CFG_STARTUP_TASK_STK_SIZE];
+
+
 
 
 /*
@@ -79,11 +69,6 @@ static  OS_STK  Task5_STK[TASK_STACKSIZE];
 */
 
 static  void  StartupTask (void  *p_arg);
-static  void  task1(void* p_arg);
-static  void  task2(void* p_arg);
-static  void  task3(void* p_arg);
-static  void  task4(void* p_arg);
-static  void  task5(void* p_arg);
 
 
 /*
@@ -101,6 +86,28 @@ static  void  task5(void* p_arg);
 *********************************************************************************************************
 */
 
+#define TASK_STACKSIZE        2048
+
+
+#define TASK1_PRIORITY        2
+#define TASK2_PRIORITY        3
+#define TASK3_PRIORITY        5
+
+#define TASK1_ID              1
+#define TASK2_ID              2
+#define TASK3_ID              3
+
+static  void  task1(void* p_arg);
+static  void  task2(void* p_arg);
+static  void  task3(void* p_arg);
+
+static  OS_STK  TASK1_STK[TASK_STACKSIZE];
+static  OS_STK  TASK2_STK[TASK_STACKSIZE];
+static  OS_STK  TASK3_STK[TASK_STACKSIZE];
+
+
+
+#include <windows.h>
 int  main (void)
 {
 #if OS_TASK_NAME_EN > 0u
@@ -115,74 +122,8 @@ int  main (void)
     CPU_Init();                                                 /* Initialize the uC/CPU services                       */
 
     OSInit();                                                   /* Initialize uC/OS-II                                  */
-
-    TimeTask task1_set = { 0, 2, 8};      //set : {start time, work time, period time}
-    TimeTask task2_set = { 0, 3, 10};      //set : {start time, work time, period time}
-    TimeTask task3_set = { 0, 5, 20 };      //set : {start time, work time, period time}
-    TimeTask task4_set = { 12, 3, 28 };      //set : {start time, work time, period time}
-    TimeTask task5_set = { 14, 2, 39 };      //set : {start time, work time, period time}
-
-
-    OSTaskCreateExt(
-        task1,
-        &task1_set,
-        &Task1_STK[TASK_STACKSIZE - 1],
-        TASK1_PRIORITY,
-        TASK1_ID,
-        &Task1_STK[0],
-        TASK_STACKSIZE,
-        &task1_set,
-        (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
-
-    OSTaskCreateExt(
-        task2,
-        &task2_set,
-        &Task2_STK[TASK_STACKSIZE - 1],
-        TASK2_PRIORITY,
-        TASK2_ID,
-        &Task2_STK[0],
-        TASK_STACKSIZE,
-        &task2_set,
-        (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
-
-
-    OSTaskCreateExt(
-        task3,
-        &task3_set,
-        &Task3_STK[TASK_STACKSIZE - 1],
-        TASK3_PRIORITY,
-        TASK3_ID,
-        &Task3_STK[0],
-        TASK_STACKSIZE,
-        &task3_set,
-        (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
-
-
-    /*OSTaskCreateExt(
-        task4,
-        &task4_set,
-        &Task4_STK[TASK_STACKSIZE - 1],
-        TASK4_PRIORITY,
-        TASK4_ID,
-        &Task4_STK[0],
-        TASK_STACKSIZE,
-        &task4_set,
-        (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
-
-
-    OSTaskCreateExt(
-        task5,
-        &task5_set,
-        &Task5_STK[TASK_STACKSIZE - 1],
-        TASK5_PRIORITY,
-        TASK5_ID,
-        &Task5_STK[0],
-        TASK_STACKSIZE,
-        &task5_set,
-        (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
-
-/*  //sample
-    OSTaskCreateExt( StartupTask,                               Create the startup task                             
+/*
+    OSTaskCreateExt( StartupTask,                               // Create the startup task                              
                      0,
                     &StartupTaskStk[APP_CFG_STARTUP_TASK_STK_SIZE - 1u],
                      APP_CFG_STARTUP_TASK_PRIO,
@@ -192,12 +133,93 @@ int  main (void)
                      0u,
                     (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
 
+
 #if OS_TASK_NAME_EN > 0u
     OSTaskNameSet(         APP_CFG_STARTUP_TASK_PRIO,
                   (INT8U *)"Startup Task",
                            &os_err);
 #endif
+
 */
+
+    /*
+    *********************************************************************************************************
+    *                                               PA03
+    ¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿
+    */
+
+    static TaskData Task1= {
+        .arrivaTime=2,
+        .executionTime=5,
+        .periodTime=30,
+        .LR1_Time=1,
+        .UR1_Time=4,
+        .LR2_Time=0,
+        .UR2_Time=0
+    };
+
+    static TaskData Task2 = {
+        .arrivaTime = 3,
+        .executionTime = 3,
+        .periodTime = 60,
+        .LR1_Time = 0,
+        .UR1_Time = 0,
+        .LR2_Time = 0,
+        .UR2_Time = 0
+    };
+
+    static TaskData Task3 = {
+        .arrivaTime = 0,
+        .executionTime = 7,
+        .periodTime = 90,
+        .LR1_Time = 0,
+        .UR1_Time = 0,
+        .LR2_Time = 1,
+        .UR2_Time = 6
+    };
+
+        OSTaskCreateExt(
+            task1,                               /* Create the startup task*/
+            0,
+            &TASK1_STK[TASK_STACKSIZE - 1],
+            TASK1_PRIORITY,
+            TASK1_ID,
+            &TASK1_STK[0],
+            TASK_STACKSIZE,
+            &Task1,
+            (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
+
+        OSTaskCreateExt(
+            task2,                               /* Create the startup task*/
+            0,
+            &TASK2_STK[TASK_STACKSIZE - 1],
+            TASK2_PRIORITY,
+            TASK2_ID,
+            &TASK2_STK[0],
+            TASK_STACKSIZE,
+            &Task2,
+            (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
+
+        OSTaskCreateExt(
+            task3,                               /* Create the startup task*/
+            0,
+            &TASK3_STK[TASK_STACKSIZE - 1],
+            TASK3_PRIORITY,
+            TASK3_ID,
+            &TASK3_STK[0],
+            TASK_STACKSIZE,
+            &Task3,
+            (OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR));
+
+
+        OSTimeSet(0);                                               //OS_Time Âk¹s
+    /*
+    ¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶
+    *                                               PA03
+    *********************************************************************************************************
+    */
+ 
+    printf("\nTick\t Event            Prio_Inheritance\n");
     OSStart();                                                  /* Start multitasking (i.e. give control to uC/OS-II)   */
 
     while (DEF_ON) {                                            /* Should Never Get Here.                               */
@@ -244,37 +266,48 @@ static  void  StartupTask (void *p_arg)
     }
 }
 
-void task1(void *p_arg) {
-    (void)p_arg;
-    while (1) { 
-        ;
+/*
+*********************************************************************************************************
+*                                               PA03
+¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿¡¿
+*/
+
+
+
+void task1(void* pdata)
+{
+    INT8U err;
+    while (1)
+    {
+        Sleep(5000);
+        OSTimeDly(25);
     }
 }
 
-void task2(void* p_arg) {
-    (void)p_arg;
-    while (1) {
-        ;
+void task2(void* pdata)
+{
+    INT8U err;
+    while (1)
+    {
+        Sleep(3000);
+        OSTimeDly(57);
     }
 }
 
-void task3(void* p_arg) {
-    (void)p_arg;
-    while (1) {
-        ;
+void task3(void* pdata)
+{
+    INT8U err;
+    while (1)
+    {
+        Sleep(7000);
+        OSTimeDly(83);
     }
 }
 
-void task4(void* p_arg) {
-    (void)p_arg;
-    while (1) {
-        ;
-    }
-}
+/*
+¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶¡¶
+*                                               PA03
+*********************************************************************************************************
+*/
 
-void task5(void* p_arg) {
-    (void)p_arg;
-    while (1) {
-        ;
-    }
-}
+

@@ -167,9 +167,10 @@ INT8U  OSTaskChangePrio (INT8U  oldprio,
     ptcb->OSTCBBitY = bity_new;
     ptcb->OSTCBBitX = bitx_new;
     OS_EXIT_CRITICAL();
-    if (OSRunning == OS_TRUE) {
-        OS_Sched();                                         /* Find new highest priority task          */
-    }
+    
+    //if (OSRunning == OS_TRUE) {
+    //    OS_Sched();                                         /* Find new highest priority task          */
+    //}
     return (OS_ERR_NONE);
 }
 #endif
@@ -877,10 +878,10 @@ INT8U  OSTaskResume (INT8U prio)
                 OSRdyTbl[ptcb->OSTCBY] |= ptcb->OSTCBBitX;
                 OS_TRACE_TASK_READY(ptcb);
                 OS_EXIT_CRITICAL();
-                if (OSRunning == OS_TRUE) {
-                    OS_TRACE_TASK_RESUME(ptcb);
-                    OS_Sched();                               /* Find new highest priority task        */
-                }
+                //if (OSRunning == OS_TRUE) {
+                //    OS_TRACE_TASK_RESUME(ptcb);
+                //    OS_Sched();                               /* Find new highest priority task        */
+                //}
             } else {
                 OS_EXIT_CRITICAL();
             }
@@ -1049,9 +1050,9 @@ INT8U  OSTaskSuspend (INT8U prio)
     OS_EXIT_CRITICAL();
     OS_TRACE_TASK_SUSPEND(ptcb);
     OS_TRACE_TASK_SUSPENDED(ptcb);
-    if (self == OS_TRUE) {                                      /* Context switch only if SELF         */
-        OS_Sched();                                             /* Find new highest priority task      */
-    }
+    //if (self == OS_TRUE) {                                      /* Context switch only if SELF         */
+    //    OS_Sched();                                             /* Find new highest priority task      */
+    //}
     return (OS_ERR_NONE);
 }
 #endif
@@ -1371,7 +1372,6 @@ void  OS_TaskStkClr (OS_STK  *pbos,
         if ((opt & OS_TASK_OPT_STK_CLR) != 0x0000u) {  /* See if stack needs to be cleared             */
 #if OS_STK_GROWTH == 1u
             while (size > 0u) {                        /* Stack grows from HIGH to LOW memory          */
-                size = 1;
                 size--;
                 *pbos++ = (OS_STK)0;                   /* Clear from bottom of stack and up!           */
             }
